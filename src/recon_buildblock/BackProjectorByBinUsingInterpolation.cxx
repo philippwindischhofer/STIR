@@ -133,6 +133,9 @@ void
 BackProjectorByBinUsingInterpolation::set_up(shared_ptr<ProjDataInfo> const& proj_data_info_ptr,
 				     shared_ptr<DiscretisedDensity<3,float> > const& image_info_ptr)
 {
+
+  std::cout << "back project using interpolation\n";
+
   this->symmetries_ptr.
     reset(new DataSymmetriesForBins_PET_CartesianGrid(proj_data_info_ptr, image_info_ptr,
 						      do_symmetry_90degrees_min_phi,

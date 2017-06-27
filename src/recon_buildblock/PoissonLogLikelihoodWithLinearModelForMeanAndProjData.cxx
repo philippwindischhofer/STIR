@@ -642,6 +642,9 @@ compute_sub_gradient_without_penalty_plus_sensitivity(TargetT& gradient,
 {
   assert(subset_num>=0);
   assert(subset_num<this->num_subsets);
+
+  std::cout << "plus_sensitivity\n";
+
   distributable_compute_gradient(this->projector_pair_ptr->get_forward_projector_sptr(), 
                                  this->projector_pair_ptr->get_back_projector_sptr(), 
                                  this->symmetries_sptr,

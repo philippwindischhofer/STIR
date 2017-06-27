@@ -123,6 +123,9 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 		    const int min_axial_pos_num, const int max_axial_pos_num,
 		    const int min_tangential_pos_num, const int max_tangential_pos_num)
 {
+
+  std::cout << "-- back project by bin using matrix\n";
+
   if (proj_matrix_ptr->is_cache_enabled()/* &&
 					    !proj_matrix_ptr->does_cache_store_only_basic_bins()*/)
     {

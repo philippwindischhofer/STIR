@@ -192,6 +192,7 @@ Succeeded
 PoissonLogLikelihoodWithLinearModelForMean<TargetT>::
 set_up(shared_ptr<TargetT> const& target_sptr)
 {
+  std::cout << "this is poisson.set_up()\n";
   if (base_type::set_up(target_sptr) != Succeeded::yes)
     return Succeeded::no;
 
@@ -360,6 +361,9 @@ compute_sub_gradient_without_penalty(TargetT& gradient,
                                      const TargetT &current_estimate, 
                                      const int subset_num)
 {
+
+  std::cout << "compute_sub_gradient_without_penalty\n";
+
   this->
     compute_sub_gradient_without_penalty_plus_sensitivity(gradient, 
                                                           current_estimate,

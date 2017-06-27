@@ -46,6 +46,7 @@ set(${dir_LIB_SOURCES}
 	ProjMatrixElemsForOneDensel 
 	ProjMatrixByBin 
 	ProjMatrixByBinUsingRayTracing 
+	ProjMatrixByBinUsingRayTracingTF
 	ProjMatrixByBinUsingInterpolation 
 	ProjMatrixByBinFromFile
 	ProjMatrixByBinSPECTUB
@@ -54,7 +55,8 @@ set(${dir_LIB_SOURCES}
 	ForwardProjectorByBinUsingProjMatrixByBin 
 	BackProjectorByBinUsingProjMatrixByBin 
 	BackProjectorByBinUsingSquareProjMatrixByBin
-	RayTraceVoxelsOnCartesianGrid 
+	RayTraceVoxelsOnCartesianGrid
+	RayTraceVoxelsOnCartesianGridTF 
 	ProjectorByBinPair 
 	ProjectorByBinPairUsingProjMatrixByBin 
 	ProjectorByBinPairUsingSeparateProjectors 

@@ -46,13 +46,13 @@
 
  */
 
-#include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracing.h"
+#include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracingTF.h"
 #include "stir/recon_buildblock/DataSymmetriesForBins_PET_CartesianGrid.h"
 #include "stir/VoxelsOnCartesianGrid.h"
 #include "stir/ProjDataInfo.h"
 
 
-#include "stir/recon_buildblock/RayTraceVoxelsOnCartesianGrid.h"
+#include "stir/recon_buildblock/RayTraceVoxelsOnCartesianGridTF.h"
 
 
 #include "stir/ProjDataInfoCylindricalNoArcCorr.h"
@@ -71,19 +71,19 @@ START_NAMESPACE_STIR
 
 
 const char * const 
-ProjMatrixByBinUsingRayTracing::registered_name =
-  "Ray Tracing";
+ProjMatrixByBinUsingRayTracingTF::registered_name =
+  "Ray Tracing TF";
 
-ProjMatrixByBinUsingRayTracing::
-ProjMatrixByBinUsingRayTracing()
+ProjMatrixByBinUsingRayTracingTF::
+ProjMatrixByBinUsingRayTracingTF()
 {
-  std::cout << "this is ProjMatrixByBinUsingRayTracing constructor\n";
+  std::cout << "this is ProjMatrixByBinUsingRayTracing TF constructor\n";
   set_defaults();
 }
 //******************** parsing *************
 
 void 
-ProjMatrixByBinUsingRayTracing::initialise_keymap()
+ProjMatrixByBinUsingRayTracingTF::initialise_keymap()
 {
   ProjMatrixByBin::initialise_keymap();
   parser.add_start_key("Ray Tracing Matrix Parameters");
@@ -101,8 +101,9 @@ ProjMatrixByBinUsingRayTracing::initialise_keymap()
 
 
 void
-ProjMatrixByBinUsingRayTracing::set_defaults()
+ProjMatrixByBinUsingRayTracingTF::set_defaults()
 {
+  std::cout << "ProjMatrixByBinUsingRayTracingTF ... set defaults\n";
   ProjMatrixByBin::set_defaults();
   this->restrict_to_cylindrical_FOV = true;
   this->num_tangential_LORs = 1;
@@ -117,13 +118,13 @@ ProjMatrixByBinUsingRayTracing::set_defaults()
 
 
 bool
-ProjMatrixByBinUsingRayTracing::post_processing()
+ProjMatrixByBinUsingRayTracingTF::post_processing()
 {
   if (ProjMatrixByBin::post_processing() == true)
     return true;
   if (this->num_tangential_LORs<1)
   { 
-    warning(boost::format("ProjMatrixByBinUsingRayTracing: num_tangential_LORs should be at least 1, but is %d")
+    warning(boost::format("ProjMatrixByBinUsingRayTracingTF: num_tangential_LORs should be at least 1, but is %d")
             % this->num_tangential_LORs);
     return true;
   }
@@ -134,14 +135,14 @@ ProjMatrixByBinUsingRayTracing::post_processing()
 //******************** get/set pairs *************
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_restrict_to_cylindrical_FOV() const
 {
   return this->restrict_to_cylindrical_FOV;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_restrict_to_cylindrical_FOV(bool val)
 {
   this->already_setup = (this->restrict_to_cylindrical_FOV == val);
@@ -149,14 +150,14 @@ set_restrict_to_cylindrical_FOV(bool val)
 }
 
 int
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_num_tangential_LORs() const
 {
   return this->num_tangential_LORs;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_num_tangential_LORs(int val)
 {
   this->already_setup = (this->num_tangential_LORs == val);
@@ -164,14 +165,14 @@ set_num_tangential_LORs(int val)
 }
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_use_actual_detector_boundaries() const
 {
   return this->use_actual_detector_boundaries;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_use_actual_detector_boundaries(bool val)
 {
   this->already_setup = (this->use_actual_detector_boundaries == val);
@@ -179,14 +180,14 @@ set_use_actual_detector_boundaries(bool val)
 }
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_do_symmetry_90degrees_min_phi() const
 {
   return this->do_symmetry_90degrees_min_phi;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_do_symmetry_90degrees_min_phi(bool val)
 {
   this->already_setup = (this->do_symmetry_90degrees_min_phi == val);
@@ -195,14 +196,14 @@ set_do_symmetry_90degrees_min_phi(bool val)
 
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_do_symmetry_180degrees_min_phi() const
 {
   return this->do_symmetry_180degrees_min_phi;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_do_symmetry_180degrees_min_phi(bool val)
 {
   this->already_setup = (this->do_symmetry_180degrees_min_phi == val);
@@ -211,14 +212,14 @@ set_do_symmetry_180degrees_min_phi(bool val)
 
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_do_symmetry_swap_segment() const
 {
   return this->do_symmetry_swap_segment;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_do_symmetry_swap_segment(bool val)
 {
   this->already_setup = (this->do_symmetry_swap_segment == val);
@@ -227,14 +228,14 @@ set_do_symmetry_swap_segment(bool val)
 
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_do_symmetry_swap_s() const
 {
   return this->do_symmetry_swap_s;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_do_symmetry_swap_s(bool val)
 {
   this->already_setup = (this->do_symmetry_swap_s == val);
@@ -243,14 +244,14 @@ set_do_symmetry_swap_s(bool val)
 
 
 bool
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 get_do_symmetry_shift_z() const
 {
   return this->do_symmetry_shift_z;
 }
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_do_symmetry_shift_z(bool val)
 {
   this->already_setup = (this->do_symmetry_shift_z == val);
@@ -270,14 +271,17 @@ static bool is_multiple(const float a, const float b)
 #endif
 
 void
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 set_up(          
     const shared_ptr<ProjDataInfo>& proj_data_info_ptr_v,
     const shared_ptr<DiscretisedDensity<3,float> >& density_info_ptr // TODO should be Info only
     )
 {
 
-  std::cout << "ProjMatrixByBinUsingRayTracing.set_up()\n";
+  std::cout << "ProjMatrixByBinUsingRayTracingTF.set_up()\n";
+
+
+  // call graph building and initialization here
 
   ProjMatrixByBin::set_up(proj_data_info_ptr_v, density_info_ptr);
 
@@ -286,7 +290,7 @@ set_up(
     dynamic_cast<const VoxelsOnCartesianGrid<float>*> (density_info_ptr.get());
 
   if (image_info_ptr == NULL)
-    error("ProjMatrixByBinUsingRayTracing initialised with a wrong type of DiscretisedDensity\n");
+    error("ProjMatrixByBinUsingRayTracingTF initialised with a wrong type of DiscretisedDensity\n");
  
   voxel_size = image_info_ptr->get_voxel_size();
   origin = image_info_ptr->get_origin();
@@ -305,12 +309,12 @@ set_up(
   
   if(sampling_distance_of_adjacent_LORs_xy/num_tangential_LORs > voxel_size.x() + 1.E-3 ||
      sampling_distance_of_adjacent_LORs_xy/num_tangential_LORs > voxel_size.y() + 1.E-3)
-     warning("WARNING: ProjMatrixByBinUsingRayTracing used for pixel size (in x,y) "
+     warning("WARNING: ProjMatrixByBinUsingRayTracingTF used for pixel size (in x,y) "
              "that is smaller than the bin size divided by num_tangential_LORs.\n"
              "This matrix will completely miss some voxels for some (or all) views.\n");
   if(sampling_distance_of_adjacent_LORs_xy < voxel_size.x() - 1.E-3 ||
      sampling_distance_of_adjacent_LORs_xy < voxel_size.y() - 1.E-3)
-     warning("WARNING: ProjMatrixByBinUsingRayTracing used for pixel size (in x,y) "
+     warning("WARNING: ProjMatrixByBinUsingRayTracingTF used for pixel size (in x,y) "
              "that is larger than the bin size.\n"
              "Backprojecting with this matrix might have artefacts at views 0 and 90 degrees.\n");
 
@@ -320,7 +324,7 @@ set_up(
         dynamic_cast<const ProjDataInfoCylindricalNoArcCorr *>(proj_data_info_ptr.get());
       if (proj_data_info_cyl_ptr== 0)
         {
-          warning("ProjMatrixByBinUsingRayTracing: use_actual_detector_boundaries"
+          warning("ProjMatrixByBinUsingRayTracingTF: use_actual_detector_boundaries"
                   " is reset to false as the projection data should be non-arccorected.\n");
           use_actual_detector_boundaries = false;
         }
@@ -337,14 +341,14 @@ set_up(
         
           if (!nocompression)
             {
-              warning("ProjMatrixByBinUsingRayTracing: use_actual_detector_boundaries"
+              warning("ProjMatrixByBinUsingRayTracingTF: use_actual_detector_boundaries"
                       " is reset to false as the projection data as either mashed or uses axial compression\n");
               use_actual_detector_boundaries = false;
             }
         }
 
       if (use_actual_detector_boundaries)
-        warning("ProjMatrixByBinUsingRayTracing: use_actual_detector_boundaries==true\n");
+        warning("ProjMatrixByBinUsingRayTracingTF: use_actual_detector_boundaries==true\n");
 
     }  
 
@@ -355,7 +359,7 @@ set_up(
     const float z_shift = - origin.z()/voxel_size.z()
       +(max_index.z()+min_index.z())/2.F;
     if (fabs(z_shift - round(z_shift)) > .01)
-      error("ProjMatrixByBinUsingRayTracing can currently not handle this image.\n"
+      error("ProjMatrixByBinUsingRayTracingTF can currently not handle this image.\n"
             "Make sure you either have \n"
             "- an odd number of planes and z_origin=n* z_voxel_size\n"
             "- or an even number of planes and z_origin=(n+1/2)*z_voxel_size\n"
@@ -405,7 +409,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
                   const int num_LORs)
 {
   
-  std::cout << "ProjMatrixByBinUsingRayTracing.ray_trace_one_lor()\n";
+  // std::cout << "ProjMatrixByBinUsingRayTracingTF.ray_trace_one_lor()\n";
 
   assert(lor.size() == 0);
 
@@ -484,19 +488,19 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
       {
         assert(stop_point.z()==start_point.z());
         if (fabs(modulo(stop_point.z(),1.F)-.5)<.001)
-          error("ProjMatrixByBinUsingRayTracing: ray tracing at the border between two z-planes\n");
+          error("ProjMatrixByBinUsingRayTracingTF: ray tracing at the border between two z-planes\n");
       }
     if (cphi==0)
       {
         assert(stop_point.y()==start_point.y());
         if (fabs(modulo(stop_point.y(),1.F)-.5)<.001)
-          error("ProjMatrixByBinUsingRayTracing: ray tracing at the border between two y-planes\n");
+          error("ProjMatrixByBinUsingRayTracingTF: ray tracing at the border between two y-planes\n");
       }
     if (sphi==0)
       {
         assert(stop_point.x()==start_point.x());
         if (fabs(modulo(stop_point.x(),1.F)-.5)<.001)
-          error("ProjMatrixByBinUsingRayTracing: ray tracing at the border between two y-planes\n");
+          error("ProjMatrixByBinUsingRayTracingTF: ray tracing at the border between two y-planes\n");
       }
 #endif
 
@@ -515,7 +519,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
     // std::cout << "now calling raytracer\n";
 
 
-    RayTraceVoxelsOnCartesianGrid(lor, 
+    RayTraceVoxelsOnCartesianGridTF(lor, 
                                   from_start_to_stop? start_point : stop_point,
                                   !from_start_to_stop? start_point : stop_point,
                                   voxel_size,
@@ -542,13 +546,13 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
 }
 //////////////////////////////////////
 void 
-ProjMatrixByBinUsingRayTracing::
+ProjMatrixByBinUsingRayTracingTF::
 calculate_proj_matrix_elems_for_one_bin(
                                         ProjMatrixElemsForOneBin& lor) const
 {
   if (!this->already_setup)
     {
-      error("ProjMatrixByBinUsingRayTracing used before calling setup");
+      error("ProjMatrixByBinUsingRayTracingTF used before calling setup");
     }
 
   const Bin bin = lor.get_bin();

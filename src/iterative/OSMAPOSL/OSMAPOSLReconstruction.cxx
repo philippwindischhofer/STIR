@@ -148,6 +148,8 @@ void OSMAPOSLReconstruction<TargetT>::
 ask_parameters()
 {
 
+  std::cout << "this is OSMAPOSLReconstruction.ask_parameters()";
+
   base_type::ask_parameters();
 
   enforce_initial_positivity=
@@ -183,9 +185,6 @@ ask_parameters()
   write_update_image = ask_num("write update image", 0,1,0);
 
 }
-
-
-
 
 template <typename TargetT>
 bool OSMAPOSLReconstruction<TargetT>::
@@ -271,6 +270,7 @@ template <typename TargetT>
 OSMAPOSLReconstruction<TargetT>::
 OSMAPOSLReconstruction(const std::string& parameter_filename)
 {  
+  std::cout << "this is OSMAPOSL alternative constructor\n";
   this->initialise(parameter_filename);
   info(this->parameter_info());
 }
@@ -308,6 +308,8 @@ Succeeded
 OSMAPOSLReconstruction<TargetT>::
 set_up(shared_ptr <TargetT > const& target_image_ptr)
 {
+  std::cout << "OSMAPOSLReconstruction.set_up()\n";
+
   // TODO should use something like iterator_traits to figure out the 
   // type instead of hard-wiring float
   static const float small_num = 0.000001F;
@@ -393,6 +395,8 @@ void
 OSMAPOSLReconstruction<TargetT>::
 update_estimate(TargetT &current_image_estimate)
 {
+  std::cout << "this is OSMAPOSL.update_estimate()";
+
   // TODO should use something like iterator_traits to figure out the 
   // type instead of hard-wiring float
   static const float small_num = 0.000001F;
@@ -412,10 +416,15 @@ update_estimate(TargetT &current_image_estimate)
   const int subset_num=this->get_subset_num();  
   info(boost::format("Now processing subset #: %1%") % subset_num);
 
+  std::cout << "now calling objective function computation\n";
+
+  // this also starts doing the forward projection
   this->objective_function().
     compute_sub_gradient_without_penalty_plus_sensitivity(*multiplicative_update_image_ptr,
                                                           current_image_estimate,
                                                           subset_num); 
+
+  std::cout << "after sub_gradient_without penalty\n";
   
   // divide by subset sensitivity  
   {
@@ -427,7 +436,7 @@ update_estimate(TargetT &current_image_estimate)
     
     //std::cerr <<this->MAP_model << std::endl;
     
-  if (this->objective_function_sptr->prior_is_zero())
+    if (this->objective_function_sptr->prior_is_zero())
     {
       divide(multiplicative_update_image_ptr->begin_all(),
              multiplicative_update_image_ptr->end_all(), 
@@ -479,7 +488,7 @@ update_estimate(TargetT &current_image_estimate)
             // bound denominator between 1/10 and 1*10
             // TODO code will fail if *denominator_iter is not a float
             *denominator_iter =
-                std::max(std::min(*denominator_iter, 10.F),1/10.F);
+                std::max(std::min(*denominator_iter, 10.F), 1/10.F);
             *denominator_iter *= (*sensitivity_iter);
             ++denominator_iter;
             ++sensitivity_iter;

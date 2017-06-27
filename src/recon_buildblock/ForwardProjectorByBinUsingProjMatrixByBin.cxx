@@ -66,6 +66,7 @@ void
 ForwardProjectorByBinUsingProjMatrixByBin::
 initialise_keymap()
 {
+  std::cout << "this is setting up the parameter parsing\n";
   parser.add_start_key("Forward Projector Using Matrix Parameters");
   parser.add_stop_key("End Forward Projector Using Matrix Parameters");
   parser.add_parsing_key("matrix type", &proj_matrix_ptr);
@@ -89,6 +90,7 @@ post_processing()
 ForwardProjectorByBinUsingProjMatrixByBin::
 ForwardProjectorByBinUsingProjMatrixByBin()
 {
+  std::cout << "this is FordwardProjectorByBinUsingProjMatrixByBin default constructor\n";
   set_defaults();
 }
 
@@ -122,6 +124,9 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 		  const int min_axial_pos_num, const int max_axial_pos_num,
 		  const int min_tangential_pos_num, const int max_tangential_pos_num)
 {
+
+  std::cout << "-- forward_project_by_bin actual\n";
+
   if (proj_matrix_ptr->is_cache_enabled()/* &&
 					    !proj_matrix_ptr->does_cache_store_only_basic_bins()*/)
   {

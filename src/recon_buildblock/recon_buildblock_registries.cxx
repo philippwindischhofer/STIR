@@ -31,6 +31,10 @@
 #include "stir/recon_buildblock/QuadraticPrior.h"
 
 #include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracing.h"
+
+// add the new class here
+#include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracingTF.h"
+
 #include "stir/recon_buildblock/ProjMatrixByBinUsingInterpolation.h"
 #include "stir/recon_buildblock/ProjMatrixByBinFromFile.h"
 #include "stir/recon_buildblock/ProjMatrixByBinSPECTUB.h"
@@ -81,6 +85,10 @@ static FilterRootPrior<DiscretisedDensity<3,float> >::RegisterIt dummy4;
 static QuadraticPrior<float>::RegisterIt dummy5;
 
 static ProjMatrixByBinUsingRayTracing::RegisterIt dummy11;
+
+// and also register it here
+static ProjMatrixByBinUsingRayTracingTF::RegisterIt dummy15;
+
 static ProjMatrixByBinUsingInterpolation::RegisterIt dummy12;
 static ProjMatrixByBinFromFile::RegisterIt dumy13;
 static ProjMatrixByBinSPECTUB::RegisterIt dumy14;

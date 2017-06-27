@@ -395,6 +395,7 @@ Succeeded
 IterativeReconstruction<TargetT>::
 reconstruct()
 {
+  std::cout << "this is IterativeReconstruction.reconstruct() without parameters\n";
   this->start_timers();
 
   this->target_data_sptr.reset(this->get_initial_data_ptr());
@@ -414,8 +415,9 @@ Succeeded
 IterativeReconstruction<TargetT>::
 reconstruct(shared_ptr<TargetT > const& target_data_sptr)
 {
-
+  std::cout << "this is IterativeReconstruction.reconstruct()\n";
   this->start_timers();
+
 #if 0
   if (this->set_up(target_data_sptr) == Succeeded::no)
     {
@@ -426,7 +428,10 @@ reconstruct(shared_ptr<TargetT > const& target_data_sptr)
 
   for(subiteration_num=start_subiteration_num;subiteration_num<=num_subiterations && this->terminate_iterations==false; subiteration_num++)
   {
+    std::cout << "now calling update_estimate()\n";
     this->update_estimate(*target_data_sptr);
+    std::cout << "returned from update_estimate()\n";
+
     this->end_of_iteration_processing(*target_data_sptr);
   }
 
@@ -434,10 +439,11 @@ reconstruct(shared_ptr<TargetT > const& target_data_sptr)
 
   cerr << "Total CPU Time " << this->get_CPU_timer_value() << "secs"<<endl;
 
+  std::cout << "end of update_estimate()\n";
+
   // currently, if there was something wrong, the programme is just aborted
   // so, if we get here, everything was fine
   return Succeeded::yes;
-
 }
 
 
@@ -446,6 +452,9 @@ Succeeded
 IterativeReconstruction<TargetT>::
 set_up(shared_ptr<TargetT > const& target_data_sptr)
 {
+
+  std::cout << "this is IterativeReconstruction.set_up()\n";
+
   if (base_type::set_up(target_data_sptr) == Succeeded::no)
     return Succeeded::no;
 

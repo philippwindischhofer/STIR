@@ -124,6 +124,9 @@ set_up(
     const shared_ptr<DiscretisedDensity<3,float> >& /*density_info_ptr*/ // TODO should be Info only
     )
 {
+
+  std::cout << "ProjMatrixByBin.set_up\n";
+
   const int min_view_num = proj_data_info_sptr->get_min_view_num();
   const int max_view_num = proj_data_info_sptr->get_max_view_num();
   const int min_segment_num = proj_data_info_sptr->get_min_segment_num();

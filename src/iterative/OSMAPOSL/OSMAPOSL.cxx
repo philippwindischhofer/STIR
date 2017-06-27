@@ -44,13 +44,14 @@ int stir::distributable_main(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
-
   USING_NAMESPACE_STIR
 
   HighResWallClockTimer t;
   t.reset();
   t.start();
-   
+ 
+  cout << "this is OSMAPOSL main file";
+  
       OSMAPOSLReconstruction<DiscretisedDensity<3,float> >
         reconstruction_object(argc>1?argv[1]:"");
 

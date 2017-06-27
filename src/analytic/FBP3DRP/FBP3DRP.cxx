@@ -36,6 +36,7 @@
 
 #ifndef STIR_NO_NAMESPACE
 using std::endl;
+
 using std::cerr;
 
 #endif                                                                                                                                                                                                                                                               

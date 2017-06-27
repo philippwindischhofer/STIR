@@ -65,7 +65,7 @@ template <typename TargetT>
 void 
 Reconstruction<TargetT>::initialise_keymap()
 {
-
+  std::cout << "this is Reconstruction.initialise_keymap()\n";
   this->parser.add_key("output filename prefix",&this->output_filename_prefix);
   this->parser.add_parsing_key("output file format type", &this->output_file_format_ptr);
   this->parser.add_parsing_key("post-filter type", &this->post_filter_sptr); 
@@ -78,6 +78,7 @@ template <typename TargetT>
 void 
 Reconstruction<TargetT>::initialise(const std::string& parameter_filename)
 {
+  std::cout << "this is Reconstruction.initialise()\n";
   if(parameter_filename.size()==0)
   {
     this->set_defaults();
@@ -86,6 +87,8 @@ Reconstruction<TargetT>::initialise(const std::string& parameter_filename)
 
 else
   {
+    std::cout << "now trying to parse the parameter file";
+
     this->set_defaults();
     if(!this->parse(parameter_filename.c_str()))
     {

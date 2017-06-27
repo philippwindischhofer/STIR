@@ -185,6 +185,9 @@ actual_forward_project(RelatedViewgrams<float>& viewgrams,
 		     const int min_tangential_pos_num, const int max_tangential_pos_num)
 
 {
+
+  std::cout << "forward_project_by_bin_using_ray_tracing\n";
+
   // this will throw an exception when the cast does not work
   const VoxelsOnCartesianGrid<float>& image = 
     dynamic_cast<const VoxelsOnCartesianGrid<float>&>(density);

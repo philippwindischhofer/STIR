@@ -224,7 +224,7 @@ private:
 #ifndef STIR_NO_MUTABLE
   mutable
 #endif
-  VectorWithOffset<VectorWithOffset<omp_lock_t> > cache_locks;
+  VectorWithOffset<VectorWithOffset<omp_lock_t> > cachelocks;
 #endif
 
   //! create the key for caching

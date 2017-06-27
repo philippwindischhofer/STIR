@@ -105,6 +105,9 @@ proj_Siddon(
 	    const float norm_factor,
 	    const bool restrict_to_cylindrical_FOV)
 {
+
+  std::cout << "forward projection using siddon\n";
+
   /*
    * Siddon == 1 => Phiplus90_r0ab 
    * Siddon == 2 => Phiplus90s0_r0ab

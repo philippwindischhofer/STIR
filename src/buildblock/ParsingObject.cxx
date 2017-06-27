@@ -81,6 +81,9 @@ set_key_values()
 bool
 ParsingObject:: parse(std::istream& in) 
 { 
+
+  std::cout << "this is ParsingObject.parse()\n";
+  
   // potentially remove the if() and always call initialise_keymap
   if (!keymap_is_initialised)
   {
@@ -119,6 +122,8 @@ ParsingObject::parse(const char * const filename)
 void
 ParsingObject::ask_parameters()
 {
+  std::cout << "ParsingObject.ask_parameters()\n";
+
   // potentially remove the if() and always call initialise_keymap
   if (!keymap_is_initialised)
   {

@@ -201,6 +201,9 @@ compute_sub_gradient_without_penalty_plus_sensitivity(TargetT& gradient,
                                          const int subset_num) 
 { 
 
+
+  std::cout << "Poisson.without_penalty_plus_sensitivity()\n";
+
   const double start_time = this->frame_defs.get_start_time(this->current_frame_num);
   const double end_time = this->frame_defs.get_end_time(this->current_frame_num);
   //go to the beginning of this frame
