@@ -37,7 +37,8 @@
    handle LORs in a plane between voxels
 */
 
-#include "stir/recon_buildblock/RayTraceVoxelsOnCartesianGridTF.h"
+
+#include "stir/recon_buildblock/TFRayTracer.h"
 
 #include "stir/recon_buildblock/ProjMatrixElemsForOneBin.h"
 #include "stir/CartesianCoordinate3D.h"
@@ -52,6 +53,9 @@ using std::max;
 
 START_NAMESPACE_STIR
 
+using namespace tensorflow;
+using namespace ::tensorflow::ops;
+
 static inline bool
 is_half_integer(const float a)
 {
@@ -59,15 +63,61 @@ is_half_integer(const float a)
     fabs(floor(a)+.5F - a)<.0001F;
 }
 
-void 
-RayTraceVoxelsOnCartesianGridTF
+GraphDef createGraph(Scope root)
+{
+  // construct the graph here
+  auto r = Placeholder(root.WithOpName("in"), DT_FLOAT);
+  auto c = Add(root.WithOpName("rp"), r, Const(root, 1.0f));
+
+  // convert it to an honest GraphDef object
+  GraphDef def;
+  TF_CHECK_OK(root.ToGraphDef(&def));
+
+  return(def);
+}
+
+// default constructor
+TFRayTracer::TFRayTracer() : session(tensorflow::NewSession({}))
+{
+  std::cout << "new ray tracer default constructor\n";
+
+  ///////////////////////////////////////////////////////////////
+
+  Scope root = Scope::NewRootScope();
+  GraphDef def = createGraph(root);
+
+  TF_CHECK_OK(session -> Create(def));
+
+
+
+  /////////////////////////////////////////////////////////////////////////////
+}
+
+TFRayTracer::~TFRayTracer()
+{
+  TF_CHECK_OK(session -> Close());
+}
+
+void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
         (ProjMatrixElemsForOneBin& lor, 
          const CartesianCoordinate3D<float>& start_point, 
          const CartesianCoordinate3D<float>& stop_point, 
          const CartesianCoordinate3D<float>& voxel_size,
          const float normalisation_constant)
 {
-  // std::cout << "RaytraceVoxelsOnCartesianGridTF\n";
+
+  //////////////////////////////////////////////////////////////////////////////////////
+  // Tensorflow template code in the innermost loop
+  // prepare the input tensors
+  Tensor in(DT_FLOAT, TensorShape({10, 10, 10}));
+  //Tensor in = intensor.tensor;
+
+  std::vector<Tensor> outputs;
+
+  TF_CHECK_OK(session -> Run({{"in", in}}, {"rp"}, {}, &outputs));
+
+  auto final_output = outputs[0].tensor<float, 3>();
+  /////////////////////////////////////////////////////////////////////////////////////
 
   // replace now this with the TF (?) raytracing code
 

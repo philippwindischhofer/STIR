@@ -51,10 +51,6 @@
 #include "stir/VoxelsOnCartesianGrid.h"
 #include "stir/ProjDataInfo.h"
 
-
-#include "stir/recon_buildblock/RayTraceVoxelsOnCartesianGridTF.h"
-
-
 #include "stir/ProjDataInfoCylindricalNoArcCorr.h"
 #include "stir/round.h"
 #include "stir/modulo.h"
@@ -62,6 +58,7 @@
 #include <algorithm>
 #include <math.h>
 #include <boost/format.hpp>
+
 
 #ifndef STIR_NO_NAMESPACE
 using std::min;
@@ -280,9 +277,6 @@ set_up(
 
   std::cout << "ProjMatrixByBinUsingRayTracingTF.set_up()\n";
 
-
-  // call graph building and initialization here
-
   ProjMatrixByBin::set_up(proj_data_info_ptr_v, density_info_ptr);
 
   proj_data_info_ptr= proj_data_info_ptr_v; 
@@ -398,7 +392,8 @@ static inline int sign(const T& t)
 
 // just do 1 LOR, returns true if lor is not empty
 static void
-ray_trace_one_lor(ProjMatrixElemsForOneBin& lor, 
+ray_trace_one_lor(TFRayTracer& rtr,
+		  ProjMatrixElemsForOneBin& lor, 
                   const float s_in_mm, const float t_in_mm, 
                   const float cphi, const float sphi, 
                   const float costheta, const float tantheta, 
@@ -517,9 +512,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
     // do actual ray tracing for this LOR
     
     // std::cout << "now calling raytracer\n";
-
-
-    RayTraceVoxelsOnCartesianGridTF(lor, 
+    rtr.RayTraceVoxelsOnCartesianGridTF(lor, 
                                   from_start_to_stop? start_point : stop_point,
                                   !from_start_to_stop? start_point : stop_point,
                                   voxel_size,
@@ -696,7 +689,7 @@ calculate_proj_matrix_elems_for_one_bin(
 
   if (num_tangential_LORs == 1)
   {
-    ray_trace_one_lor(lor, s_in_mm, t_in_mm, 
+    ray_trace_one_lor((TFRayTracer&)rtr, lor, s_in_mm, t_in_mm, 
                         cphi, sphi, costheta, tantheta, 
                         offset_in_z, fovrad_in_mm, 
                         voxel_size,
@@ -717,7 +710,7 @@ calculate_proj_matrix_elems_for_one_bin(
     for (int s_LOR_num=1; s_LOR_num<=num_tangential_LORs; ++s_LOR_num, current_s_in_mm+=s_inc)
     {
       ray_traced_lor.erase();
-      ray_trace_one_lor(ray_traced_lor, current_s_in_mm, t_in_mm, 
+      ray_trace_one_lor((TFRayTracer&)rtr, ray_traced_lor, current_s_in_mm, t_in_mm, 
                           cphi, sphi, costheta, tantheta, 
                           offset_in_z, fovrad_in_mm, 
                           voxel_size,

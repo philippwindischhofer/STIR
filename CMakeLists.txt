@@ -23,6 +23,8 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 # require 2.8.3 to get FOLDER properties support (without that, we only need cmake 2.6)
 cmake_minimum_required(VERSION 2.8.3)
 
+# set(CMAKE_CXX_STANDARD 11)
+
 # add project source to cmake path such that it can use our find_package modules and .cmake files
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/src/cmake)
 
@@ -49,6 +51,29 @@ set(STIR_VERSION
 set(BOOST_ROOT CACHE PATH "root of Boost")
 find_package( Boost 1.36.0 REQUIRED )
 include_directories(${Boost_INCLUDE_DIRS})
+
+###############################################################
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+message(STATUS "module path: ${CMAKE_MODULE_PATH}")
+
+### put here new libraries for tensorflow support
+# for Eigen
+find_package(Eigen REQUIRED)
+
+# for Protobuf
+find_package(Protobuf REQUIRED)
+
+# for Tensorflow
+find_package(TensorFlow REQUIRED)
+
+set(PROJECT_INCLUDE_DIRS ${PROJECT_INCLUDE_DIRS} ${TensorFlow_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${Protobuf_INCLUDE_DIRS})
+set(PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${TensorFlow_LIBRARIES})
+set(PROJECT_DEPENDENCIES ${PROJECT_DEPENDENCIES} Eigen Protobuf)
+
+include_directories(${PROJECT_INCLUDE_DIRS})
+
+###############################################################
 
 #### optional external libraries. 
 # Listed here such that we know if we should compile extra utilities

@@ -31,10 +31,11 @@
 
 #include "stir/RegisteredParsingObject.h"
 #include "stir/recon_buildblock/ProjMatrixByBin.h"
+
+#include "stir/recon_buildblock/TFRayTracer.h"
+
 #include "stir/CartesianCoordinate3D.h"
 #include "stir/shared_ptr.h"
-
- 
 
 START_NAMESPACE_STIR
 
@@ -126,6 +127,7 @@ class ProjMatrixByBinUsingRayTracingTF :
 	       >
 {
 public :
+
     //! Name which will be used when parsing a ProjMatrixByBin object
   static const char * const registered_name; 
 
@@ -176,6 +178,8 @@ public :
   //!@}
 
 private:
+  TFRayTracer rtr;
+
   //! variable to keep track if setup is called already
   /*! Using any of the \c set function will set it to false, so you will have to call setup() again.
    */
@@ -211,6 +215,9 @@ private:
    virtual void set_defaults();
    virtual void initialise_keymap();
    virtual bool post_processing();
+
+   // add raytracer-object here:
+   
   
 };
 

@@ -230,4 +230,5 @@ if(BUILD_DOCUMENTATION)
 #    install(DIRECTORY ${PROJECT_BINARY_DIR}/html DESTINATION share/doc/stir)
 endif()
 
+set_property(SOURCE ./recon_buildblock/recon_buildblock_registries.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
 

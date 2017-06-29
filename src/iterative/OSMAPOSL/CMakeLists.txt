@@ -1,5 +1,6 @@
 
 set(dir iterative_OSMAPOSL)
+set(CMAKE_CXX_STANDARD 11)
 
 set (dir_LIB_SOURCES ${dir}_LIB_SOURCES)
 

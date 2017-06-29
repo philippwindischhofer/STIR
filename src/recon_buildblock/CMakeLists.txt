@@ -18,10 +18,12 @@
 # cmake file for building STIR. See the STIR User's Guide and http://www.cmake.org.
 
 set(dir recon_buildblock)
+set(CMAKE_CXX_STANDARD 11)
 
 set (dir_LIB_SOURCES ${dir}_LIB_SOURCES)
 
 set(${dir_LIB_SOURCES}
+ #recon_buildblock_registries
  ForwardProjectorByBin 
 	ForwardProjectorByBinUsingRayTracing 
 	ForwardProjectorByBinUsingRayTracing_Siddon 
@@ -56,7 +58,7 @@ set(${dir_LIB_SOURCES}
 	BackProjectorByBinUsingProjMatrixByBin 
 	BackProjectorByBinUsingSquareProjMatrixByBin
 	RayTraceVoxelsOnCartesianGrid
-	RayTraceVoxelsOnCartesianGridTF 
+	TFRayTracer 
 	ProjectorByBinPair 
 	ProjectorByBinPairUsingProjMatrixByBin 
 	ProjectorByBinPairUsingSeparateProjectors 
@@ -78,6 +80,15 @@ set(${dir_LIB_SOURCES}
         PoissonLogLikelihoodWithLinearKineticModelAndDynamicProjectionData	
         PoissonLogLikelihoodWithLinearModelForMeanAndGatedProjDataWithMotion
 )
+
+##########################################################################################
+
+#set_property(SOURCE ProjMatrixByBinUsingRayTracingTF.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
+#set_property(SOURCE TFRayTracer.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
+
+#set_property(SOURCE recon_buildblock_registries.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
+
+##########################################################################################
 
 if (HAVE_ECAT)
  list(APPEND ${dir_LIB_SOURCES}
@@ -111,6 +122,10 @@ endif()
 if (STIR_OPENMP)
   target_link_libraries(recon_buildblock ${OpenMP_EXE_LINKER_FLAGS})
 endif()
+
+################################################################################
+target_link_libraries(recon_buildblock ${PROJECT_LIBRARIES})
+################################################################################
 
 # TODO what to do with IO?
 # modelling_buildblock currently needed for ParametricDensity and Patlak (TODO get rid of this somehow?)
