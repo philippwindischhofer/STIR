@@ -16,4 +16,4 @@ information.
 This software is distributed under an open source license, see LICENSE.txt
 for details.
 
-
+This is a modified version and is integrated together with Google's "Tensorflow" library to bring the power of GPU computing to PET image reconstruction.
