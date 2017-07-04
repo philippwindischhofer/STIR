@@ -148,12 +148,17 @@ ForwardProjectorByBinUsingProjMatrixByBin::
         for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
         { 
           Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
+	  //std::cout << "accessing matrix\n";
           proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
+	  //std::cout << "back in forwardProjector\n";
           proj_matrix_row.forward_project(bin,image);
+	  //std::cout << "do the forward projection\n";
           viewgram[ax_pos][tang_pos] = bin.get_bin_value();
+	  //std::cout << "end of block \n";
         }
         ++r_viewgrams_iter; 
     }	   
+    //std::cout << "out of loop\n";
   }
   else
   {
@@ -230,6 +235,8 @@ ForwardProjectorByBinUsingProjMatrixByBin::
                 (max_axial_pos_num - min_axial_pos_num + 1) *
                 (max_tangential_pos_num - min_tangential_pos_num + 1)));      
   }
+
+  std::cout << "end of forward projection\n";
 }
 
 END_NAMESPACE_STIR

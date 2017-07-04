@@ -405,7 +405,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
                   const int num_LORs)
 {
   
-  std::cout << "ProjMatrixByBinUsingRayTracing.ray_trace_one_lor()\n";
+  //std::cout << "ProjMatrixByBinUsingRayTracing.ray_trace_one_lor()\n";
 
   assert(lor.size() == 0);
 
@@ -475,6 +475,52 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
     stop_point.x() = (s_in_mm*cphi + min_a*sphi)/voxel_size.x();
     stop_point.y() = (s_in_mm*sphi - min_a*cphi)/voxel_size.y(); 
     stop_point.z() = (t_in_mm/costheta+offset_in_z - min_a*tantheta)/voxel_size.z();
+
+    /*
+    // manual override to measure it
+    start_point.x() = 81;
+    start_point.y() = -38;
+    start_point.z() = -1;
+
+    stop_point.x() = 72;
+    stop_point.y() = 54;
+    stop_point.z() = 0;
+    */
+
+    if(start_point.x() < stop_point.x())
+    {
+      start_point.x() = ceil(start_point.x());
+      stop_point.x() = floor(stop_point.x());
+    }
+    else
+    {
+      start_point.x() = floor(start_point.x());
+      stop_point.x() = ceil(stop_point.x());
+    }
+
+   if(start_point.y() < stop_point.y())
+    {
+      start_point.y() = ceil(start_point.y());
+      stop_point.y() = floor(stop_point.y());
+    }
+    else
+    {
+      start_point.y() = floor(start_point.y());
+      stop_point.y() = ceil(stop_point.y());
+    }
+
+   if(start_point.z() < stop_point.z())
+    {
+      start_point.z() = ceil(start_point.z());
+      stop_point.z() = floor(stop_point.z());
+    }
+    else
+    {
+      start_point.z() = floor(start_point.z());
+      stop_point.z() = ceil(stop_point.z());
+    }
+   
+   
 
 #if 0
     // KT 18/05/2005 this is no longer necessary
@@ -719,7 +765,7 @@ calculate_proj_matrix_elems_for_one_bin(
                           voxel_size,
                           restrict_to_cylindrical_FOV,
                           num_lors_per_axial_pos*num_tangential_LORs);
-      //std::cerr << "ray traced size " << ray_traced_lor.size() << std::endl;
+      // std::cerr << "ray traced size " << ray_traced_lor.size() << std::endl;
       lor.merge(ray_traced_lor);
     }
   }

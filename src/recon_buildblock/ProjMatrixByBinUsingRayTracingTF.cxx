@@ -475,6 +475,66 @@ ray_trace_one_lor(TFRayTracer& rtr,
     stop_point.y() = (s_in_mm*sphi - min_a*cphi)/voxel_size.y(); 
     stop_point.z() = (t_in_mm/costheta+offset_in_z - min_a*tantheta)/voxel_size.z();
 
+    /*
+    start_point.x() = round(start_point.x());
+    stop_point.x() = round(stop_point.x());
+
+    start_point.y() = round(start_point.y());
+    stop_point.y() = round(stop_point.y());
+
+    start_point.z() = round(start_point.z());
+    stop_point.z() = round(stop_point.z());
+    */
+
+    // test structure to put start and endpoints onto integer voxel coord
+    
+    if(start_point.x() < stop_point.x())
+    {
+      start_point.x() = ceil(start_point.x());
+      stop_point.x() = floor(stop_point.x());
+    }
+    else
+    {
+      start_point.x() = floor(start_point.x());
+      stop_point.x() = ceil(stop_point.x());
+    }
+
+   if(start_point.y() < stop_point.y())
+    {
+      start_point.y() = ceil(start_point.y());
+      stop_point.y() = floor(stop_point.y());
+    }
+    else
+    {
+      start_point.y() = floor(start_point.y());
+      stop_point.y() = ceil(stop_point.y());
+    }
+
+   if(start_point.z() < stop_point.z())
+    {
+      start_point.z() = ceil(start_point.z());
+      stop_point.z() = floor(stop_point.z());
+    }
+    else
+    {
+      start_point.z() = floor(start_point.z());
+      stop_point.z() = ceil(stop_point.z());
+    }
+   
+   
+   // end of test insert
+
+   // manual override to measure it
+   /*
+   start_point.x() = 81;
+   start_point.y() = -38;
+   start_point.z() = -1;
+
+   stop_point.x() = 72;
+   stop_point.y() = 54;
+   stop_point.z() = 0;
+   */
+
 #if 0
     // KT 18/05/2005 this is no longer necessary
 
@@ -522,6 +582,10 @@ ray_trace_one_lor(TFRayTracer& rtr,
                                   1/voxel_size.x()/num_LORs // normalise to some kind of 'pixel units'
 #endif
            );
+
+    lor.sort();
+
+    //std::cout << "raytracing returned" << std::endl;
 
 #ifndef NDEBUG
     {
@@ -721,6 +785,8 @@ calculate_proj_matrix_elems_for_one_bin(
     }
   }
       
+  //std::cout << "out of raytracing structure" << std::endl;
+
   // now add on other LORs in axial direction
   if (lor.size()>0)
   {          
@@ -777,6 +843,7 @@ calculate_proj_matrix_elems_for_one_bin(
       } // if( tantheta!=0 && num_lors_per_axial_pos>1)
   } //if (lor.size()!=0)
   
+  //std::cout << "end of matrix element computation" << std::endl;
 }
 
 static void 
@@ -913,7 +980,6 @@ static void merge_zplus1(ProjMatrixElemsForOneBin& lor)
         }
 #endif
 
-
   float next_value;
   float current_value = lor.begin()->get_value();
   ProjMatrixElemsForOneBin::const_iterator lor_old_end = lor.end();
@@ -943,9 +1009,9 @@ static void merge_zplus1(ProjMatrixElemsForOneBin& lor)
     }
     
   }
-  cerr << "after merge\n";  
+  //cerr << "after merge\n";  
   lor.check_state();
-  cerr << "after check_St\n";
+  //cerr << "after check_St\n";
 }
 #endif
 

@@ -376,18 +376,24 @@ forward_project(Bin& single,
                 const DiscretisedDensity<3,float>& density) const
 {
   {  
-    
+    //std::cout << "in forward project\n";
     BasicCoordinate<3,int> coords;
     const_iterator element_ptr = begin();
     
+    //std::cout << "start loop\n";
     while (element_ptr != end())
     {
       coords = element_ptr->get_coords();
-      
+
       if (coords[1] >= density.get_min_index() && coords[1] <= density.get_max_index())
+      {
+	//std::cout << coords[1] << " / " << coords[2] << " / " << coords[3] << std::endl;
         single += density[coords[1]][coords[2]][coords[3]] * element_ptr->get_value();
+	//std::cout << "OK\n";
+      }
       ++element_ptr;		
     }	      
+    // std::cout << "end loop\n";
   }   
 }
 

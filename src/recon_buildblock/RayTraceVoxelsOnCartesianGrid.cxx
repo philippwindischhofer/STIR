@@ -66,7 +66,18 @@ RayTraceVoxelsOnCartesianGrid
          const CartesianCoordinate3D<float>& voxel_size,
          const float normalisation_constant)
 {
-  std::cout << "RaytraceVoxelsOnCartesianGrid\n";
+  //std::cout << "RaytraceVoxelsOnCartesianGrid\n";
+
+  //std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
+  //std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
+
+  //std::cout << normalisation_constant << std::endl;
+
+  const float shift_x = 100.f;
+  const float shift_y = 100.f;
+  const float shift_z = 50.;
+
+  std::cout << roundf(start_point.x() + shift_x) * voxel_size.x() << " / " << roundf(start_point.y() + shift_y) * voxel_size.y() << " / " << roundf(start_point.z() + shift_z) * voxel_size.z() << " // " << roundf(stop_point.x() + shift_x) * voxel_size.x() << " / " << roundf(stop_point.y() + shift_y) * voxel_size.y() << " / " << roundf(stop_point.z() + shift_z) * voxel_size.z() << std::endl;
 
   const CartesianCoordinate3D<float> difference = stop_point-start_point;
 
@@ -254,21 +265,25 @@ const float axend = zero_diff_in_x ? d12*1000000.F : (xmax - start_point.x()) * 
       if ( ax < ay )    
         if (  ax  < az ) 
         { // LOR leaves voxel through yz-plane               	
+	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << ax - a << std::endl;
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,ax - a));
           a = ax;ax += inc_x;
           current_voxel.x()+=sign_x;
         }      	  
-        else{ 	// LOR leaves voxel through xy-plane            	      
+        else{ 	// LOR leaves voxel through xy-plane         
+	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << az - a << std::endl;   	      
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a));	    
           a = az ;  az +=  inc_z;
           current_voxel.z()+=sign_z;
         } 
-        else  if ( ay < az) {	// LOR leaves voxel through xz-plane 		                           
+      else  if ( ay < az) {	// LOR leaves voxel through xz-plane 	
+	//std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << ay - a << std::endl;
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,ay - a));
           a = ay;   ay +=  inc_y;
           current_voxel.y()+=sign_y;
         }  
-        else {// LOR leaves voxel through xy-plane 			                      
+        else {// LOR leaves voxel through xy-plane 
+	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << az - a << std::endl;			                      
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a ));
           a = az; az +=  inc_z;
           current_voxel.z()+=sign_z; 

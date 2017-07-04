@@ -38,6 +38,8 @@
 #include "tensorflow/cc/framework/ops.h"
 #include "tensorflow/core/framework/tensor.h"
 
+#include <time.h>
+
 START_NAMESPACE_STIR
 
 class ProjMatrixElemsForOneBin;
