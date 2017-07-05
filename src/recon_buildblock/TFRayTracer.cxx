@@ -131,25 +131,25 @@ void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
   const float shift_z = 50.;
 
   
-  std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
-  std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
+  //std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
+  //std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
  
-  std::cout << voxel_size.x() << " / " << voxel_size.y() << " / " << voxel_size.z() << std::endl;
+  //std::cout << voxel_size.x() << " / " << voxel_size.y() << " / " << voxel_size.z() << std::endl;
  
-  std::cout << normalisation_constant << std::endl;
+  //std::cout << normalisation_constant << std::endl;
 
   tensorflow::Input::Initializer voxel_dimensions({voxel_size.x(), voxel_size.y(), voxel_size.z()});
   Tensor voxel_dimensions_in = voxel_dimensions.tensor;
 
   
-  tensorflow::Input::Initializer testlor({ {{roundf(start_point.x() + shift_x) * voxel_size.x(), 
-	    roundf(start_point.y() + shift_y) * voxel_size.y(), 
-	    roundf(start_point.z() + shift_z) * voxel_size.z()}, 
-	  {roundf(stop_point.x() + shift_x) * voxel_size.x(), 
-	      roundf(stop_point.y() + shift_y) * voxel_size.y(), 
-	      roundf(stop_point.z() + shift_z) * voxel_size.z() }} });
+  tensorflow::Input::Initializer testlor({ {{(start_point.x() + shift_x) * voxel_size.x(), 
+	    (start_point.y() + shift_y) * voxel_size.y(), 
+	    (start_point.z() + shift_z) * voxel_size.z()}, 
+	  {(stop_point.x() + shift_x) * voxel_size.x(), 
+	      (stop_point.y() + shift_y) * voxel_size.y(), 
+	      (stop_point.z() + shift_z) * voxel_size.z() }} });
 
-  //std::cout << roundf(start_point.x() + shift_x) * voxel_size.x() << " / " << roundf(start_point.y() + shift_y) * voxel_size.y() << " / " << roundf(start_point.z() + shift_z) * voxel_size.z() << " // " << roundf(stop_point.x() + shift_x) * voxel_size.x() << " / " << roundf(stop_point.y() + shift_y) * voxel_size.y() << " / " << roundf(stop_point.z() + shift_z) * voxel_size.z() << std::endl;
+  //std::cout << (start_point.x() + shift_x) * voxel_size.x() << " / " << (start_point.y() + shift_y) * voxel_size.y() << " / " << (start_point.z() + shift_z) * voxel_size.z() << " // " << (stop_point.x() + shift_x) * voxel_size.x() << " / " << (stop_point.y() + shift_y) * voxel_size.y() << " / " << (stop_point.z() + shift_z) * voxel_size.z() << std::endl;
 
   Tensor testlor_in = testlor.tensor;
   // std::cout << testlor_in.tensor<float,3>() << std::endl;
@@ -174,14 +174,17 @@ void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
   // now go through the returned array and extract the coordinates of the voxels and the intersection lengths
   for(int ii = 0; ii < lengtharr.dimension(0); ii++)
   {
+    //std::cout << std::isnormal(lengtharr(ii, 0)) << std::endl;
     // format: (intersection length, x, y, z)
-    if((lengtharr(ii, 0) != 0.f) && (!isnan(lengtharr(ii, 0))))
+    if(std::isnormal(lengtharr(ii, 0)))
     {
       CartesianCoordinate3D<int> cur_voxel(lengtharr(ii, 3) - shift_z, lengtharr(ii, 2) - shift_y, lengtharr(ii, 1) - shift_x);
       float cur_val = lengtharr(ii, 0);
+      
       lor.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
 
-      std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
+      //std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
+
     }
   }
   

@@ -487,6 +487,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
     stop_point.z() = 0;
     */
 
+    /*
     if(start_point.x() < stop_point.x())
     {
       start_point.x() = ceil(start_point.x());
@@ -519,7 +520,7 @@ ray_trace_one_lor(ProjMatrixElemsForOneBin& lor,
       start_point.z() = floor(start_point.z());
       stop_point.z() = ceil(stop_point.z());
     }
-   
+    */
    
 
 #if 0

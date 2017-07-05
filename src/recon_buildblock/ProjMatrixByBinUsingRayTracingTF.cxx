@@ -487,7 +487,7 @@ ray_trace_one_lor(TFRayTracer& rtr,
     */
 
     // test structure to put start and endpoints onto integer voxel coord
-    
+    /*
     if(start_point.x() < stop_point.x())
     {
       start_point.x() = ceil(start_point.x());
@@ -520,7 +520,7 @@ ray_trace_one_lor(TFRayTracer& rtr,
       start_point.z() = floor(start_point.z());
       stop_point.z() = ceil(stop_point.z());
     }
-   
+    */
    
    // end of test insert
 
