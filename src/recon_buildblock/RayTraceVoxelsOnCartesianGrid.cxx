@@ -77,7 +77,7 @@ RayTraceVoxelsOnCartesianGrid
   const float shift_y = 100.f;
   const float shift_z = 50.;
 
-  std::cout << roundf(start_point.x() + shift_x) * voxel_size.x() << " / " << roundf(start_point.y() + shift_y) * voxel_size.y() << " / " << roundf(start_point.z() + shift_z) * voxel_size.z() << " // " << roundf(stop_point.x() + shift_x) * voxel_size.x() << " / " << roundf(stop_point.y() + shift_y) * voxel_size.y() << " / " << roundf(stop_point.z() + shift_z) * voxel_size.z() << std::endl;
+  //std::cout << roundf(start_point.x() + shift_x) * voxel_size.x() << " / " << roundf(start_point.y() + shift_y) * voxel_size.y() << " / " << roundf(start_point.z() + shift_z) * voxel_size.z() << " // " << roundf(stop_point.x() + shift_x) * voxel_size.x() << " / " << roundf(stop_point.y() + shift_y) * voxel_size.y() << " / " << roundf(stop_point.z() + shift_z) * voxel_size.z() << std::endl;
 
   const CartesianCoordinate3D<float> difference = stop_point-start_point;
 
@@ -272,7 +272,7 @@ const float axend = zero_diff_in_x ? d12*1000000.F : (xmax - start_point.x()) * 
         }      	  
         else{ 	// LOR leaves voxel through xy-plane         
 	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << az - a << std::endl;   	      
-          lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a));	    
+          lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a));	    	    
           a = az ;  az +=  inc_z;
           current_voxel.z()+=sign_z;
         } 

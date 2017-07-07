@@ -390,6 +390,8 @@ static inline int sign(const T& t)
   return t<0 ? -1 : 1;
 }
 
+// higher-level function that performs the raytracing when the LOR is given by s, t, phi and theta coordinates
+// instead of the start and endpoint coordinates directly
 // just do 1 LOR, returns true if lor is not empty
 static void
 ray_trace_one_lor(TFRayTracer& rtr,
@@ -403,6 +405,11 @@ ray_trace_one_lor(TFRayTracer& rtr,
                   const bool restrict_to_cylindrical_FOV,
                   const int num_LORs)
 {
+
+  // for reverse-engineering
+  // print num_LORs to see if they are the ones from the parameter file
+  
+
   
   // std::cout << "ProjMatrixByBinUsingRayTracingTF.ray_trace_one_lor()\n";
 
@@ -468,72 +475,13 @@ ray_trace_one_lor(TFRayTracer& rtr,
       
     } //!restrict_to_cylindrical_FOV
     
+    // convert the LOR start- and endpoint coordinates into voxel units
     start_point.x() = (s_in_mm*cphi + max_a*sphi)/voxel_size.x();
     start_point.y() = (s_in_mm*sphi - max_a*cphi)/voxel_size.y(); 
     start_point.z() = (t_in_mm/costheta+offset_in_z - max_a*tantheta)/voxel_size.z();
     stop_point.x() = (s_in_mm*cphi + min_a*sphi)/voxel_size.x();
     stop_point.y() = (s_in_mm*sphi - min_a*cphi)/voxel_size.y(); 
     stop_point.z() = (t_in_mm/costheta+offset_in_z - min_a*tantheta)/voxel_size.z();
-
-    /*
-    start_point.x() = round(start_point.x());
-    stop_point.x() = round(stop_point.x());
-
-    start_point.y() = round(start_point.y());
-    stop_point.y() = round(stop_point.y());
-
-    start_point.z() = round(start_point.z());
-    stop_point.z() = round(stop_point.z());
-    */
-
-    // test structure to put start and endpoints onto integer voxel coord
-    /*
-    if(start_point.x() < stop_point.x())
-    {
-      start_point.x() = ceil(start_point.x());
-      stop_point.x() = floor(stop_point.x());
-    }
-    else
-    {
-      start_point.x() = floor(start_point.x());
-      stop_point.x() = ceil(stop_point.x());
-    }
-
-   if(start_point.y() < stop_point.y())
-    {
-      start_point.y() = ceil(start_point.y());
-      stop_point.y() = floor(stop_point.y());
-    }
-    else
-    {
-      start_point.y() = floor(start_point.y());
-      stop_point.y() = ceil(stop_point.y());
-    }
-
-   if(start_point.z() < stop_point.z())
-    {
-      start_point.z() = ceil(start_point.z());
-      stop_point.z() = floor(stop_point.z());
-    }
-    else
-    {
-      start_point.z() = floor(start_point.z());
-      stop_point.z() = ceil(stop_point.z());
-    }
-    */
-   
-   // end of test insert
-
-   // manual override to measure it
-   /*
-   start_point.x() = 81;
-   start_point.y() = -38;
-   start_point.z() = -1;
-
-   stop_point.x() = 72;
-   stop_point.y() = 54;
-   stop_point.z() = 0;
-   */
 
 #if 0
     // KT 18/05/2005 this is no longer necessary
@@ -601,7 +549,10 @@ ray_trace_one_lor(TFRayTracer& rtr,
   }
 
 }
+
 //////////////////////////////////////
+// this function is supposed to stitch together the LORs (multiple for averaging etc.) which are then passed to the RT to make up the matrix element from (?)
+///////////////////////////////////////
 void 
 ProjMatrixByBinUsingRayTracingTF::
 calculate_proj_matrix_elems_for_one_bin(
@@ -612,12 +563,15 @@ calculate_proj_matrix_elems_for_one_bin(
       error("ProjMatrixByBinUsingRayTracingTF used before calling setup");
     }
 
+  // get the entry (linked to a certain LOR) of the matrix we need to compute
   const Bin bin = lor.get_bin();
   assert(bin.segment_num() >= proj_data_info_ptr->get_min_segment_num());    
   assert(bin.segment_num() <= proj_data_info_ptr->get_max_segment_num());    
 
   assert(lor.size() == 0);
    
+  // now start obtaining the coordinates that parametrize the LOR that corresponds to the BIN. 
+  // get it from the ProjDataInfo object that knows how the scanner looks like.
   float phi;
   float s_in_mm = proj_data_info_ptr->get_s(bin);
   /* Implementation note.
@@ -674,7 +628,11 @@ calculate_proj_matrix_elems_for_one_bin(
    
   const float sampling_distance_of_adjacent_LORs_z =
     proj_data_info_ptr->get_sampling_in_t(bin)/costheta;
+
+  // here, have now all the parameters of the LOR extracted & ready to use
+  //////////////////////////////////////////////////////////////////////////////////////////
  
+  // now, start putting multiple LORs such that their average gives a better result for the actual matrix element
 
   // find number of LORs we have to take, such that we don't miss voxels
   // we have to subtract a tiny amount from the quotient, to avoid having too many LORs
@@ -719,6 +677,7 @@ calculate_proj_matrix_elems_for_one_bin(
      complication here. However, we can do it slightly more efficient here as
      we might be using 2 rays for one ring.
   */
+
   const float z_position_of_first_LOR_wrt_centre_of_TOR =
     (-sampling_distance_of_adjacent_LORs_z/(2*num_lors_per_axial_pos)*
       (num_lors_per_axial_pos-1))
@@ -741,6 +700,8 @@ calculate_proj_matrix_elems_for_one_bin(
 
   // use FOV which is slightly 'inside' the image to avoid
   // index out of range
+
+  // fovrad ... radius of field-of-view?
 #ifdef STIR_PMRT_LARGER_FOV
   const float fovrad_in_mm = 
     min((min(max_index.x(), -min_index.x())+.45F)*voxel_size.x(),
@@ -751,8 +712,19 @@ calculate_proj_matrix_elems_for_one_bin(
         (min(max_index.y(), -min_index.y()))*voxel_size.y()); 
 #endif
 
+  
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // this is the part that creates multiple LORs and then raytraces them separately
+  // Task: don't put in new matrix elements that lie along straight LORs (involves first finding the voxels along the LOR etc)
+  //       but instead select "randomly" voxels (with a distribution that favours the center of a voxel compared to its edges
+  //       to avoid having too many RT iterations) in the region occupied by the TOR
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  std::cout << num_tangential_LORs << std::endl;
+
   if (num_tangential_LORs == 1)
   {
+    // get TOR just by one LOR in its center. not a very good approximation
     ray_trace_one_lor((TFRayTracer&)rtr, lor, s_in_mm, t_in_mm, 
                         cphi, sphi, costheta, tantheta, 
                         offset_in_z, fovrad_in_mm, 
@@ -771,9 +743,17 @@ calculate_proj_matrix_elems_for_one_bin(
         proj_data_info_ptr->get_sampling_in_s(bin)/num_tangential_LORs;
     float current_s_in_mm =
         s_in_mm - s_inc*(num_tangential_LORs-1)/2.F;
+
+    // here: create many points in the (s,t)-range already swept now, then do them all in parallel
+    // and add the fragmented voxels and their LOIs to the matrix element structure
+
+    // do here the ray tracing of all the LORs needed for the matrix element
     for (int s_LOR_num=1; s_LOR_num<=num_tangential_LORs; ++s_LOR_num, current_s_in_mm+=s_inc)
     {
+      // get rid of the old result
       ray_traced_lor.erase();
+      
+      // store the new one
       ray_trace_one_lor((TFRayTracer&)rtr, ray_traced_lor, current_s_in_mm, t_in_mm, 
                           cphi, sphi, costheta, tantheta, 
                           offset_in_z, fovrad_in_mm, 
@@ -781,13 +761,19 @@ calculate_proj_matrix_elems_for_one_bin(
                           restrict_to_cylindrical_FOV,
                           num_lors_per_axial_pos*num_tangential_LORs);
       //std::cerr << "ray traced size " << ray_traced_lor.size() << std::endl;
+
+      // and put it together with the previous ones
       lor.merge(ray_traced_lor);
     }
   }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
       
   //std::cout << "out of raytracing structure" << std::endl;
 
   // now add on other LORs in axial direction
+  
+  // this does not call any more raytracing, but only uses matrix elements / LORs that have already been treated
+
   if (lor.size()>0)
   {          
     if (tantheta==0 ) 

@@ -205,9 +205,6 @@ private:
 
   shared_ptr<ProjDataInfo> proj_data_info_ptr;
 
-  // add here the new TF ray tracer object
-
-
   virtual void 
     calculate_proj_matrix_elems_for_one_bin(
                                             ProjMatrixElemsForOneBin&) const;

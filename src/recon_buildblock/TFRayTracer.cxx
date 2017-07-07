@@ -1,43 +1,3 @@
-//
-//
-/*
-    Copyright (C) 2000 PARAPET partners
-    Copyright (C) 2000- 2011, Hammersmith Imanet Ltd
-    This file is part of STIR.
-
-    This file is free software; you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 2.1 of the License, or
-    (at your option) any later version.
-
-    This file is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    See STIR/LICENSE.txt for details
-*/
-/*!
-  \file
-  \ingroup recon_buildblock
-
-  \brief Implementation of RayTraceVoxelsOnCartesianGrid  
-
-  \author Kris Thielemans
-  \author Mustapha Sadki
-  \author (loosely based on some C code by Matthias Egger)
-  \author PARAPET project
-
-*/
-/* Modification history:
-   KT 30/05/2002 
-   start and stop point can now be arbitrarily located
-   treatment of LORs parallel to planes is now scale independent (and checked with asserts)
-   KT 18/05/2005
-   handle LORs in a plane between voxels
-*/
-
-
 #include "stir/recon_buildblock/TFRayTracer.h"
 
 #include "stir/recon_buildblock/ProjMatrixElemsForOneBin.h"
@@ -67,12 +27,12 @@ is_half_integer(const float a)
 GraphDef createGraph(Scope root)
 {
   // construct the graph here
-auto r = Placeholder(root.WithOpName("in"), DT_FLOAT);
-auto c = Add(root.WithOpName("rp"), r, Const(root, 1.0f));
+  auto r = Placeholder(root.WithOpName("in"), DT_FLOAT);
+  auto c = Add(root.WithOpName("rp"), r, Const(root, 1.0f));
 
   // convert it to an honest GraphDef object
-GraphDef def;
-TF_CHECK_OK(root.ToGraphDef(&def));
+  GraphDef def;
+  TF_CHECK_OK(root.ToGraphDef(&def));
 
   return(def);
 }
@@ -86,8 +46,8 @@ TFRayTracer::TFRayTracer() : session(NewSession(tensorflow::SessionOptions({})))
   Scope root = Scope::NewRootScope();
 
   GraphDef def;
-//ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/TFRaytracer3D-STIR.pb", &def);
-  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/TFSiddon3D-STIR.pb", &def);
+  //ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/TFSiddon3D-STIR.pb", &def);
+  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRaytracingIterative-STIR.pb", &def);
 
   TF_CHECK_OK(session -> Create(def));
 }
@@ -130,18 +90,19 @@ void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
   const float shift_y = 100.f;
   const float shift_z = 50.;
 
-  
-  //std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
-  //std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
+  /*
+  std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
+  std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
  
-  //std::cout << voxel_size.x() << " / " << voxel_size.y() << " / " << voxel_size.z() << std::endl;
+  std::cout << voxel_size.x() << " / " << voxel_size.y() << " / " << voxel_size.z() << std::endl;
  
-  //std::cout << normalisation_constant << std::endl;
+  std::cout << normalisation_constant << std::endl;
+  */
 
   tensorflow::Input::Initializer voxel_dimensions({voxel_size.x(), voxel_size.y(), voxel_size.z()});
   Tensor voxel_dimensions_in = voxel_dimensions.tensor;
 
-  
+  // convert the voxel coordinates into actual, physically meaningful numbers
   tensorflow::Input::Initializer testlor({ {{(start_point.x() + shift_x) * voxel_size.x(), 
 	    (start_point.y() + shift_y) * voxel_size.y(), 
 	    (start_point.z() + shift_z) * voxel_size.z()}, 
@@ -187,31 +148,6 @@ void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
 
     }
   }
-  
-  /*
-  // now go through the output length array, extract the nonzero entries and append them to the STIR object
-  for(int ii = 0; ii < lengtharr.dimension(0); ii++)
-  {
-    for(int jj = 0; jj < lengtharr.dimension(1); jj++)
-    {
-      for(int kk = 0; kk < lengtharr.dimension(2); kk++)
-      {
-	if(lengtharr(ii, jj, kk) != 0.0f)
-	{
-	  //std::cout << ii  << " / " << jj << " / " << kk << " - " << lengtharr(ii, jj, kk) << std::endl;
-	  CartesianCoordinate3D<int> cur_voxel(kk - shift_z, jj - shift_y, ii - shift_x);
-	  CartesianCoordinate3D<int> empty_voxel(0,0,-1);
-	  float cur_val = lengtharr(ii, jj, kk);
-
-	  //std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
-
-	  lor.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
-	  //lor.push_back(ProjMatrixElemsForOneBin::value_type(empty_voxel, 10.0f));
-	}
-      }
-    }
-  }
-  */
 
  // std::cout << "end raytracer" << std::endl;
 }
