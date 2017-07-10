@@ -147,8 +147,11 @@ ForwardProjectorByBinUsingProjMatrixByBin::
       for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
         for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
         { 
+	  // The "Bin" class represents a single viewgram bin, with its coordinates and the value attached to it
           Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
 	  //std::cout << "accessing matrix\n";
+
+	  // the method that computes the matrix element *deletes* whatever content was inside proj_matrix_row before the call (good for us)!
           proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
 	  //std::cout << "back in forwardProjector\n";
           proj_matrix_row.forward_project(bin,image);

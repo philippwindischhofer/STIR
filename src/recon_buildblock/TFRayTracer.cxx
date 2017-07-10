@@ -6,48 +6,36 @@
 #include <math.h>
 #include <algorithm>
 
-#ifndef STIR_NO_NAMESPACE
-using std::min;
-using std::max;
-#endif
-
 START_NAMESPACE_STIR
 
 using namespace tensorflow;
 using namespace ::tensorflow::ops;
 
-static inline bool
-is_half_integer(const float a)
-{
-  return
-    fabs(floor(a)+.5F - a)<.0001F;
-}
-
-// not needed at the moment, since graph is read from file
-GraphDef createGraph(Scope root)
-{
-  // construct the graph here
-  auto r = Placeholder(root.WithOpName("in"), DT_FLOAT);
-  auto c = Add(root.WithOpName("rp"), r, Const(root, 1.0f));
-
-  // convert it to an honest GraphDef object
-  GraphDef def;
-  TF_CHECK_OK(root.ToGraphDef(&def));
-
-  return(def);
-}
-
 // default constructor, with standard tensorflow session options
-TFRayTracer::TFRayTracer() : session(NewSession(tensorflow::SessionOptions({})))
+TFRayTracer::TFRayTracer(int chunksize) : session(NewSession(tensorflow::SessionOptions({}))), 
+					  points_in(DT_FLOAT, TensorShape({chunksize, 3})), ray_vec_in(DT_FLOAT, TensorShape({chunksize, 3})), 
+					  voxel_size_in(DT_FLOAT, TensorShape({3})), norm_const_in(DT_FLOAT, TensorShape({chunksize})), 
+					  points_in_tensor(points_in.tensor<float, 2>()), ray_vec_in_tensor(ray_vec_in.tensor<float, 2>()), 
+					  voxel_size_in_tensor(voxel_size_in.tensor<float, 1>()), norm_const_in_tensor(norm_const_in.tensor<float, 1>()), 
+  chunksize(chunksize), cur_pos(0)
 {
   std::cout << "new ray tracer default constructor\n";
   srand(time(NULL));
+
+  // put here all tensors to zero, or their default values (such that even if they have not been completely filled by the user, they are zero-padded)
+  points_in_tensor.setZero();
+  ray_vec_in_tensor.setZero();
+  norm_const_in_tensor.setZero();
+  voxel_size_in_tensor.setZero();
 
   Scope root = Scope::NewRootScope();
 
   GraphDef def;
   //ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/TFSiddon3D-STIR.pb", &def);
-  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRaytracingIterative-STIR.pb", &def);
+  //ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRaytracingIterative-STIR.pb", &def);
+
+  // load the correct TF-Graph back from the Protobuf file
+  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRayMarching.pb", &def);
 
   TF_CHECK_OK(session -> Create(def));
 }
@@ -57,27 +45,83 @@ TFRayTracer::~TFRayTracer()
   TF_CHECK_OK(session -> Close());
 }
 
-// takes care of the shifted coordinate origin etc.
-Tensor build_lor(const CartesianCoordinate3D<float>& start_point, const CartesianCoordinate3D<float>& stop_point, const float shift_x, const float shift_y, const float shift_z)
+ void TFRayTracer::setVoxelSize(CartesianCoordinate3D<float>& voxel_size)
+ {
+   voxel_size_in_tensor(0) = voxel_size.x(); 
+   voxel_size_in_tensor(1) = voxel_size.y();
+   voxel_size_in_tensor(2) = voxel_size.z();
+ }
+
+ Succeeded TFRayTracer::schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const)
 {
-  // TODO: maybe put random numbers here?
-  const float eps_x = 0.55 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-  const float eps_y = 0.55 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-  const float eps_z = 0.55 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+  Succeeded retval = Succeeded::no;
 
-  tensorflow::Input::Initializer testlor({ {{roundf(start_point.x() + shift_x), 
-	    roundf(start_point.y() + shift_y), 
-	    roundf(start_point.z() + shift_z)}, 
-	  {roundf(stop_point.x() + shift_x) + eps_x, 
-	      roundf(stop_point.y() + shift_y) + eps_y, 
-	      roundf(stop_point.z() + shift_z) + eps_z }} });
- 
-  Tensor testlor_in = testlor.tensor;
-  std::cout << testlor_in.tensor<float,3>() << std::endl;
+  // put the new point and its auxiliary information into the input tensors, if there is still free space
+  if(cur_pos < chunksize)
+  {
+    points_in_tensor(cur_pos, 0) = point.x();
+    points_in_tensor(cur_pos, 1) = point.y();
+    points_in_tensor(cur_pos, 2) = point.z();
 
-  return testlor_in;
+    ray_vec_in_tensor(cur_pos, 0) = ray_vec.x();
+    ray_vec_in_tensor(cur_pos, 1) = ray_vec.y();
+    ray_vec_in_tensor(cur_pos, 2) = ray_vec.z();
+
+    norm_const_in_tensor(cur_pos) = norm_const;
+
+    cur_pos++;
+    retval = Succeeded::yes;
+  }
+
+   return retval;
 }
 
+ std::vector<ProjMatrixElemsForOneBinValue> TFRayTracer::execute()
+{
+   std::vector<ProjMatrixElemsForOneBinValue> retval;
+   std::vector<Tensor> outputs;
+
+   // collects all input parameters to the ray marcher
+   std::vector<std::pair<string, Tensor>> inputs = {
+     {"points", points_in},
+     {"ray_vec", ray_vec_in},
+     {"voxel_size", voxel_size_in},
+     {"norm_const", norm_const_in}
+   };
+
+   /*
+   std::cout << "starting to execute" << std::endl;
+   std::cout << points_in_tensor << std::endl;
+   std::cout << ray_vec_in_tensor << std::endl;
+   std::cout << voxel_size_in_tensor << std::endl;
+   std::cout << norm_const_in_tensor << std::endl;
+   */
+
+   TF_CHECK_OK(session -> Run(inputs, {"out"}, {}, &outputs));
+
+   // this contains the results of the ray marching for individual voxels in the following format
+   // LOI | voxel index x | voxel index y | voxel index z
+   auto rt_result = outputs[0].tensor<float, 2>();
+
+   // go through the list and put it into the actual return value structure
+   for(int ii = 0; ii < rt_result.dimension(0); ii++)
+     {
+
+       CartesianCoordinate3D<int> cur_voxel(rt_result(ii, 3), rt_result(ii, 2), rt_result(ii, 1));
+       float cur_val = rt_result(ii, 0);
+      
+       retval.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
+
+       //std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
+	 
+     }   
+
+   cur_pos = 0;
+
+   return retval;
+}
+
+// legacy function that traces an explicitely given LOR -> will be discontinued soon
 void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
         (ProjMatrixElemsForOneBin& lor, 
          const CartesianCoordinate3D<float>& start_point, 

@@ -32,6 +32,9 @@
 
 #include "stir/common.h"
 
+#include "stir/recon_buildblock/ProjMatrixElemsForOneBinValue.h"
+#include "stir/Succeeded.h"
+
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
 #include "tensorflow/cc/ops/array_ops.h"
@@ -43,19 +46,40 @@
 START_NAMESPACE_STIR
 
 class ProjMatrixElemsForOneBin;
+class Succeeded;
 template <typename elemT> class CartesianCoordinate3D;
 
 class TFRayTracer 
 {
   private:
-  
   std::unique_ptr<tensorflow::Session> session;
 
+  // the tensors needed as inputs to the voxel-based raytracing: these act as queues that are filled element-by-element every time that "schedule_point" is called
+  tensorflow::Tensor points_in;
+  tensorflow::Tensor ray_vec_in;
+  tensorflow::Tensor voxel_size_in;
+  tensorflow::Tensor norm_const_in;
+  tensorflow::TTypes<float, 2>::Tensor points_in_tensor;
+  tensorflow::TTypes<float, 2>::Tensor ray_vec_in_tensor;
+  tensorflow::TTypes<float, 1>::Tensor voxel_size_in_tensor;
+  tensorflow::TTypes<float, 1>::Tensor norm_const_in_tensor;
+  
+  int chunksize;
+  int cur_pos;
+
   public:
-  TFRayTracer();
+TFRayTracer(int chunksize);
   ~TFRayTracer();
   TFRayTracer(const TFRayTracer&) = delete;
   TFRayTracer& operator=(const TFRayTracer&) = delete;
+
+  void setVoxelSize(CartesianCoordinate3D<float>& voxel_size);
+
+  // put a new point into place
+  Succeeded schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const);
+
+  // now act on all elements at once with the ray tracer, collect the result and return it
+  std::vector<ProjMatrixElemsForOneBinValue> execute();
 
   // Method that actually performs the ray tracing
   void 

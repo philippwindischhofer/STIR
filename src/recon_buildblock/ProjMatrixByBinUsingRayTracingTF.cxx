@@ -72,7 +72,7 @@ ProjMatrixByBinUsingRayTracingTF::registered_name =
   "Ray Tracing TF";
 
 ProjMatrixByBinUsingRayTracingTF::
-ProjMatrixByBinUsingRayTracingTF()
+ProjMatrixByBinUsingRayTracingTF() : rtr(500)
 {
   std::cout << "this is ProjMatrixByBinUsingRayTracing TF constructor\n";
   set_defaults();
@@ -287,6 +287,10 @@ set_up(
     error("ProjMatrixByBinUsingRayTracingTF initialised with a wrong type of DiscretisedDensity\n");
  
   voxel_size = image_info_ptr->get_voxel_size();
+
+  // now that the voxel size is known, communicate it to the ray-tracing object
+  rtr.setVoxelSize(voxel_size);
+
   origin = image_info_ptr->get_origin();
   image_info_ptr->get_regular_range(min_index, max_index);
 
@@ -388,6 +392,72 @@ template <typename T>
 static inline int sign(const T& t) 
 {
   return t<0 ? -1 : 1;
+}
+
+float eucl_norm(const CartesianCoordinate3D<float>& in)
+{
+  return sqrt(pow(in.x(), 2) + pow(in.y(), 2) + pow(in.z(), 2));
+}
+
+void print_proj_matr_element(ProjMatrixElemsForOneBinValue toprint)
+{
+  std::cout << toprint.coord1() << " / " << toprint.coord2() << " / " << toprint.coord3() << " -- " << toprint.get_value() << std::endl;
+}
+
+void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
+ 		      const CartesianCoordinate3D<float>& start_point,
+		      const CartesianCoordinate3D<float>& end_point,
+		      const CartesianCoordinate3D<float>& voxel_size,
+		      const float normalization_constant)
+{
+  // task here: schedule some points along the connecting line between start_point and end_point
+  // note: need to do everything in actual coordinates, not in voxel units!
+
+  std::cout << "S = " << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
+  std::cout << "E = " << end_point.x() << " / " << end_point.y() << " / " << end_point.z() << std::endl;
+
+  CartesianCoordinate3D<float> start_phys(start_point.z() * voxel_size.z(),
+					  start_point.y() * voxel_size.y(),
+					  start_point.x() * voxel_size.x());
+
+  CartesianCoordinate3D<float> end_phys(end_point.z() * voxel_size.z(),
+					end_point.y() * voxel_size.y(),
+					end_point.x() * voxel_size.x());
+
+  // make the number of points along the line proportional to the actual, physical distance (to get a constant sampling density in real space)
+  float dist = eucl_norm(end_phys - start_phys);
+
+  // also get the unit ray vector here
+  CartesianCoordinate3D<float> ray_vec((end_phys - start_phys) / dist);
+
+  // note: the multiplicity factor here specifies the actual resolution that will be reached
+  int resolution = 1;
+  float increment = 1 / (dist * resolution);
+  int actual_number_points = 0;
+
+  for(float t = 0; t < 1; t += increment)
+  {
+    CartesianCoordinate3D<float> cur_pos;
+
+    cur_pos.x() = t * (end_phys.x() - start_phys.x()) + start_phys.x();
+    cur_pos.y() = t * (end_phys.y() - start_phys.y()) + start_phys.y();
+    cur_pos.z() = t * (end_phys.z() - start_phys.z()) + start_phys.z();
+
+    rtr.schedulePoint(cur_pos, ray_vec, normalization_constant);
+    actual_number_points++;
+  }
+
+  //std::cout << "asked for " << actual_number_points << " points to ray trace" << std::endl;
+
+  // perform the ray tracing
+  std::vector<ProjMatrixElemsForOneBinValue> result(rtr.execute());
+
+  // now take them and put them into the actual lor. Need to iterate over them!
+  for(int ii = 0; ii < actual_number_points; ii++)
+    {
+      lor.push_back(result[ii]);
+      print_proj_matr_element(result[ii]);
+    }
 }
 
 // higher-level function that performs the raytracing when the LOR is given by s, t, phi and theta coordinates
@@ -519,8 +589,10 @@ ray_trace_one_lor(TFRayTracer& rtr,
 
     // do actual ray tracing for this LOR
     
+    // in a first step, schedule only one LOR and execute it immediately afterwards. I.e. just put a wrapper around schedulePoint & Execute to make it sound like RayTraceVoxelsOnCartesianGrid
+
     // std::cout << "now calling raytracer\n";
-    rtr.RayTraceVoxelsOnCartesianGridTF(lor, 
+    raytrace_wrapper(rtr, lor, 
                                   from_start_to_stop? start_point : stop_point,
                                   !from_start_to_stop? start_point : stop_point,
                                   voxel_size,
@@ -720,7 +792,7 @@ calculate_proj_matrix_elems_for_one_bin(
   //       to avoid having too many RT iterations) in the region occupied by the TOR
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  std::cout << num_tangential_LORs << std::endl;
+  //std::cout << num_tangential_LORs << std::endl;
 
   if (num_tangential_LORs == 1)
   {
