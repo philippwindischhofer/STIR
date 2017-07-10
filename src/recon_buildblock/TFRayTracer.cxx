@@ -76,10 +76,10 @@ TFRayTracer::~TFRayTracer()
    return retval;
 }
 
- std::vector<ProjMatrixElemsForOneBinValue> TFRayTracer::execute()
+ int TFRayTracer::execute(std::vector<ProjMatrixElemsForOneBinValue>& retval)
 {
-   std::vector<ProjMatrixElemsForOneBinValue> retval;
    std::vector<Tensor> outputs;
+   int number_traced = cur_pos;
 
    // collects all input parameters to the ray marcher
    std::vector<std::pair<string, Tensor>> inputs = {
@@ -117,8 +117,7 @@ TFRayTracer::~TFRayTracer()
      }   
 
    cur_pos = 0;
-
-   return retval;
+   return number_traced;
 }
 
 // legacy function that traces an explicitely given LOR -> will be discontinued soon

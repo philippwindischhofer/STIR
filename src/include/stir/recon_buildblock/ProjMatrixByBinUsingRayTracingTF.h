@@ -180,6 +180,11 @@ public :
 private:
   TFRayTracer rtr;
 
+  // private functions to prepare a LOR for execution, and to actually execute this LOR
+  Succeeded scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs);
+
+  void execute(ProjMatrixElemsForOneBin& retval);
+
   //! variable to keep track if setup is called already
   /*! Using any of the \c set function will set it to false, so you will have to call setup() again.
    */
@@ -212,10 +217,6 @@ private:
    virtual void set_defaults();
    virtual void initialise_keymap();
    virtual bool post_processing();
-
-   // add raytracer-object here:
-   
-  
 };
 
 END_NAMESPACE_STIR

@@ -75,11 +75,11 @@ TFRayTracer(int chunksize);
 
   void setVoxelSize(CartesianCoordinate3D<float>& voxel_size);
 
-  // put a new point into place
+  // puts a new point into place
   Succeeded schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const);
 
-  // now act on all elements at once with the ray tracer, collect the result and return it
-  std::vector<ProjMatrixElemsForOneBinValue> execute();
+  // acts on all elements at once with the ray tracer and put the result into "retval". Returns the total number of points that have been operated on
+  int execute(std::vector<ProjMatrixElemsForOneBinValue>& retval);
 
   // Method that actually performs the ray tracing
   void 

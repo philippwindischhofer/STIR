@@ -450,7 +450,8 @@ void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
   //std::cout << "asked for " << actual_number_points << " points to ray trace" << std::endl;
 
   // perform the ray tracing
-  std::vector<ProjMatrixElemsForOneBinValue> result(rtr.execute());
+  std::vector<ProjMatrixElemsForOneBinValue> result;
+  rtr.execute(result);
 
   // now take them and put them into the actual lor. Need to iterate over them!
   for(int ii = 0; ii < actual_number_points; ii++)
@@ -458,6 +459,108 @@ void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
       lor.push_back(result[ii]);
       print_proj_matr_element(result[ii]);
     }
+}
+
+Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, float cphi, float sphi, float costheta, float tantheta, float offset_in_z, float fovrad_in_mm, bool restrict_to_cylindrical_FOV, int num_LORs)
+{
+  // here, take "num_LORs" as a parameter controlling the resolution in a broader sense (
+
+  Succeeded retval = Succeeded::no;
+
+  // first, find the limits for the LOR parameter "a"
+  float max_a;
+  float min_a;
+    
+  if (restrict_to_cylindrical_FOV)
+    {
+#ifdef STIR_PMRT_LARGER_FOV
+      if (fabs(s_in_mm) >= fovrad_in_mm) return Succeeded::yes;
+#else
+      if (fabs(s_in_mm) > fovrad_in_mm) return Succeeded::yes;
+#endif
+      // a has to be such that X^2+Y^2 == fovrad^2      
+      if (fabs(s_in_mm) == fovrad_in_mm) 
+        {
+          max_a = min_a = 0;
+        }
+      else
+        {
+          max_a = sqrt(square(fovrad_in_mm) - square(s_in_mm));
+          min_a = -max_a;
+        }
+    } // restrict_to_cylindrical_FOV
+  else
+    {
+      // use FOV which is square.
+      // note that we use square and not rectangular as otherwise symmetries
+      // would take us out of the FOV. TODO
+      /*
+        a has to be such that 
+        |X| <= fovrad_in_mm &&  |Y| <= fovrad_in_mm
+      */
+      if (fabs(cphi) < 1.E-3 || fabs(sphi) < 1.E-3) 
+	{
+	  if (fovrad_in_mm < fabs(s_in_mm))
+	    return Succeeded::yes; // give back yes since we didn't do anything
+	  max_a = fovrad_in_mm;
+	  min_a = -fovrad_in_mm;
+	}
+      else
+	{
+	  max_a = min((fovrad_in_mm*sign(sphi) - s_in_mm*cphi)/sphi,
+		      (fovrad_in_mm*sign(cphi) + s_in_mm*sphi)/cphi);
+	  min_a = max((-fovrad_in_mm*sign(sphi) - s_in_mm*cphi)/sphi,
+		      (-fovrad_in_mm*sign(cphi) + s_in_mm*sphi)/cphi);
+	  if (min_a > max_a - 1.E-3*voxel_size.x())
+	    return Succeeded::yes;
+	}
+    }
+  
+  // then, compute the actual coordinates of start- and endpoint of the LOR (within the FOV boundaries) IN PHYSICAL UNITS!
+  CartesianCoordinate3D<float> start_point;  
+  CartesianCoordinate3D<float> stop_point;
+  start_point.x() = s_in_mm * cphi + max_a * sphi;
+  start_point.y() = s_in_mm * sphi - max_a * cphi; 
+  start_point.z() = t_in_mm / costheta+offset_in_z - max_a * tantheta;
+  stop_point.x() = s_in_mm * cphi + min_a * sphi;
+  stop_point.y() = s_in_mm * sphi - min_a * cphi; 
+  stop_point.z() = t_in_mm / costheta+offset_in_z - min_a * tantheta;
+
+  // also compute the unit-ray vector
+  float dist = eucl_norm(stop_point - start_point);
+  CartesianCoordinate3D<float> ray_vec((stop_point - start_point) / dist);
+
+  // then, find points along the LOR and schedule them. Do it randomly, or evenly spaced?? Try both.
+  // try it first with equal sampling
+  int resolution = 1;
+  float increment = 1 / (dist * resolution);
+
+  Succeeded status = Succeeded::yes;
+  float normalization_constant = 1.0f; // figure out what to put here
+
+  for(float t = 0; t < 1; t += increment)
+    {
+      CartesianCoordinate3D<float> cur_pos;
+
+      cur_pos.x() = t * (stop_point.x() - start_point.x()) + start_point.x();
+      cur_pos.y() = t * (stop_point.y() - start_point.y()) + start_point.y();
+      cur_pos.z() = t * (stop_point.z() - start_point.z()) + start_point.z();
+
+      status = rtr.schedulePoint(cur_pos, ray_vec, normalization_constant);
+      if(status == Succeeded::no)
+	{
+	  std::cerr << "ERROR: increase chunksize of ray tracer. Ran out of space!" << std::endl;
+	}
+    }
+
+  return retval;
+}
+
+void ProjMatrixByBinUsingRayTracingTF::execute(ProjMatrixElemsForOneBin& retval)
+{
+  // all the difficult work has been done before already, just need to execute the scheduled points and return the resulting ProjMatrixElemsForOneBin object that contains already the union of all LOIs from all LORs
+
+  // retval.push_back();
 }
 
 // higher-level function that performs the raytracing when the LOR is given by s, t, phi and theta coordinates
@@ -784,7 +887,6 @@ calculate_proj_matrix_elems_for_one_bin(
         (min(max_index.y(), -min_index.y()))*voxel_size.y()); 
 #endif
 
-  
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   // this is the part that creates multiple LORs and then raytraces them separately
   // Task: don't put in new matrix elements that lie along straight LORs (involves first finding the voxels along the LOR etc)
@@ -825,7 +927,11 @@ calculate_proj_matrix_elems_for_one_bin(
       // get rid of the old result
       ray_traced_lor.erase();
       
+      // replace this with a call to "scheduleLOR" (a private function of this class) that takes the same high-level parameters
+
       // store the new one
+
+      // replace this with a call to scheduleLOR, with (about) the same arguments
       ray_trace_one_lor((TFRayTracer&)rtr, ray_traced_lor, current_s_in_mm, t_in_mm, 
                           cphi, sphi, costheta, tantheta, 
                           offset_in_z, fovrad_in_mm, 
@@ -838,6 +944,10 @@ calculate_proj_matrix_elems_for_one_bin(
       lor.merge(ray_traced_lor);
     }
   }
+
+  // here, call "execute" (also a private function of this class), that will put the scheduled points onto TF and return a LOR-object
+  // (i.e. the type that will also be the output of the original calculate_proj_matrix_element). Can then use this object directly further below!
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
       
   //std::cout << "out of raytracing structure" << std::endl;
