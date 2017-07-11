@@ -36,6 +36,7 @@
 
 
 #include "stir/recon_buildblock/ProjMatrixByBin.h"
+#include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracingTF.h"
 #include "stir/recon_buildblock/ForwardProjectorByBin.h"
 #include "stir/RegisteredParsingObject.h"
 #include "stir/shared_ptr.h"
@@ -82,6 +83,7 @@ public:
   
 private:
   shared_ptr<ProjMatrixByBin>  proj_matrix_ptr;
+  bool TF_enabled;
   
 
   void actual_forward_project(RelatedViewgrams<float>&, 

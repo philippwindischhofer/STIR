@@ -173,7 +173,7 @@ protected:
   virtual void 
     calculate_proj_matrix_elems_for_one_bin(
     ProjMatrixElemsForOneBin& 
-    ) const = 0;
+					    ) const = 0;
 
   /////////////////////////////// parsing stuff //////////////////////
   
@@ -200,7 +200,7 @@ protected:
   */
   Succeeded get_cached_proj_matrix_elems_for_one_bin(
 	 	 ProjMatrixElemsForOneBin&
-                 ) const;		
+						     ) const;		
   
   //! The method to store data in the cache.
   void  cache_proj_matrix_elems_for_one_bin( const ProjMatrixElemsForOneBin&)

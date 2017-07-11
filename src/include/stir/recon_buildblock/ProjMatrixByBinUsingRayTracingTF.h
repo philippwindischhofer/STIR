@@ -134,6 +134,8 @@ public :
   //! Default constructor (calls set_defaults())
   ProjMatrixByBinUsingRayTracingTF();
 
+  void check_status();
+
   //! Stores all necessary geometric info
   /*! Note that the density_info_ptr is not stored in this object. It's only used to get some info on sizes etc.
   */
@@ -178,12 +180,12 @@ public :
   //!@}
 
 private:
-  TFRayTracer rtr;
+  mutable TFRayTracer rtr;
 
   // private functions to prepare a LOR for execution, and to actually execute this LOR
-  Succeeded scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs);
+  void scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
 
-  void execute(ProjMatrixElemsForOneBin& retval);
+  void execute(ProjMatrixElemsForOneBin& retval) const;
 
   //! variable to keep track if setup is called already
   /*! Using any of the \c set function will set it to false, so you will have to call setup() again.
@@ -210,13 +212,22 @@ private:
 
   shared_ptr<ProjDataInfo> proj_data_info_ptr;
 
+  // this is the backwards-compatible call to get one matrix element only
+  // internally, it calls "schedule_matrix_elem" once, followed by a call to "execute"
   virtual void 
     calculate_proj_matrix_elems_for_one_bin(
                                             ProjMatrixElemsForOneBin&) const;
 
-   virtual void set_defaults();
-   virtual void initialise_keymap();
-   virtual bool post_processing();
+  // these are the new functions
+  // schedules a new matrix element for evaluation (i.e. appends it to some internal queue)
+  void schedule_matrix_elems_for_one_bin(ProjMatrixElemsForOneBin&);
+
+  // evaluates all matrix elements in the queue and returns their results
+  void execute(std::vector<ProjMatrixElemsForOneBin>);
+
+  virtual void set_defaults();
+  virtual void initialise_keymap();
+  virtual bool post_processing();
 };
 
 END_NAMESPACE_STIR

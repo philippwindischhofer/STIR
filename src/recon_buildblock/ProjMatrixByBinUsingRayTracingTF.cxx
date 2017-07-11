@@ -72,7 +72,7 @@ ProjMatrixByBinUsingRayTracingTF::registered_name =
   "Ray Tracing TF";
 
 ProjMatrixByBinUsingRayTracingTF::
-ProjMatrixByBinUsingRayTracingTF() : rtr(500)
+ProjMatrixByBinUsingRayTracingTF() : rtr(2000)
 {
   std::cout << "this is ProjMatrixByBinUsingRayTracing TF constructor\n";
   set_defaults();
@@ -255,6 +255,10 @@ set_do_symmetry_shift_z(bool val)
   this->do_symmetry_shift_z = val;
 }
 
+void ProjMatrixByBinUsingRayTracingTF::check_status()
+{
+  std::cout << " cast worked " << std::endl;
+}
 
 //******************** actual implementation *************
 
@@ -404,6 +408,7 @@ void print_proj_matr_element(ProjMatrixElemsForOneBinValue toprint)
   std::cout << toprint.coord1() << " / " << toprint.coord2() << " / " << toprint.coord3() << " -- " << toprint.get_value() << std::endl;
 }
 
+/*
 void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
  		      const CartesianCoordinate3D<float>& start_point,
 		      const CartesianCoordinate3D<float>& end_point,
@@ -451,7 +456,9 @@ void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
 
   // perform the ray tracing
   std::vector<ProjMatrixElemsForOneBinValue> result;
-  rtr.execute(result);
+  int number_traced = rtr.execute(result);
+
+  std::cout << "traced " << number_traced << " points" << std::endl;
 
   // now take them and put them into the actual lor. Need to iterate over them!
   for(int ii = 0; ii < actual_number_points; ii++)
@@ -460,12 +467,11 @@ void raytrace_wrapper(TFRayTracer& rtr, ProjMatrixElemsForOneBin& lor,
       print_proj_matr_element(result[ii]);
     }
 }
+*/
 
-Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, float cphi, float sphi, float costheta, float tantheta, float offset_in_z, float fovrad_in_mm, bool restrict_to_cylindrical_FOV, int num_LORs)
+void ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, float cphi, float sphi, float costheta, float tantheta, float offset_in_z, float fovrad_in_mm, bool restrict_to_cylindrical_FOV, int num_LORs) const
 {
   // here, take "num_LORs" as a parameter controlling the resolution in a broader sense (
-
-  Succeeded retval = Succeeded::no;
 
   // first, find the limits for the LOR parameter "a"
   float max_a;
@@ -474,9 +480,9 @@ Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_i
   if (restrict_to_cylindrical_FOV)
     {
 #ifdef STIR_PMRT_LARGER_FOV
-      if (fabs(s_in_mm) >= fovrad_in_mm) return Succeeded::yes;
+      if (fabs(s_in_mm) >= fovrad_in_mm) return;
 #else
-      if (fabs(s_in_mm) > fovrad_in_mm) return Succeeded::yes;
+      if (fabs(s_in_mm) > fovrad_in_mm) return;
 #endif
       // a has to be such that X^2+Y^2 == fovrad^2      
       if (fabs(s_in_mm) == fovrad_in_mm) 
@@ -501,7 +507,7 @@ Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_i
       if (fabs(cphi) < 1.E-3 || fabs(sphi) < 1.E-3) 
 	{
 	  if (fovrad_in_mm < fabs(s_in_mm))
-	    return Succeeded::yes; // give back yes since we didn't do anything
+	    return; // give back yes since we didn't do anything
 	  max_a = fovrad_in_mm;
 	  min_a = -fovrad_in_mm;
 	}
@@ -512,7 +518,7 @@ Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_i
 	  min_a = max((-fovrad_in_mm*sign(sphi) - s_in_mm*cphi)/sphi,
 		      (-fovrad_in_mm*sign(cphi) + s_in_mm*sphi)/cphi);
 	  if (min_a > max_a - 1.E-3*voxel_size.x())
-	    return Succeeded::yes;
+	    return;
 	}
     }
   
@@ -535,8 +541,7 @@ Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_i
   int resolution = 1;
   float increment = 1 / (dist * resolution);
 
-  Succeeded status = Succeeded::yes;
-  float normalization_constant = 1.0f; // figure out what to put here
+  float normalization_constant = 1. / num_LORs; 
 
   for(float t = 0; t < 1; t += increment)
     {
@@ -546,23 +551,30 @@ Succeeded ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_i
       cur_pos.y() = t * (stop_point.y() - start_point.y()) + start_point.y();
       cur_pos.z() = t * (stop_point.z() - start_point.z()) + start_point.z();
 
-      status = rtr.schedulePoint(cur_pos, ray_vec, normalization_constant);
-      if(status == Succeeded::no)
-	{
-	  std::cerr << "ERROR: increase chunksize of ray tracer. Ran out of space!" << std::endl;
-	}
+      rtr.schedulePoint(cur_pos, ray_vec, normalization_constant);
     }
 
-  return retval;
+  return;
 }
 
-void ProjMatrixByBinUsingRayTracingTF::execute(ProjMatrixElemsForOneBin& retval)
+void ProjMatrixByBinUsingRayTracingTF::execute(ProjMatrixElemsForOneBin& retval) const
 {
   // all the difficult work has been done before already, just need to execute the scheduled points and return the resulting ProjMatrixElemsForOneBin object that contains already the union of all LOIs from all LORs
+  std::vector<ProjMatrixElemsForOneBinValue> res;
+  int num_traced = rtr.execute(res);
 
-  // retval.push_back();
+  //std::cout << "traced " << num_traced << " points" << std::endl;
+
+  // for now, have just always only one matrix element in the queue, to which all computed LOIs belong. just append it to retval and be fine. needs to be modified later!!
+
+  // TODO: is there a better solution that copies things in chunks?
+  for(std::vector<ProjMatrixElemsForOneBinValue>::iterator it = res.begin(); it < res.end(); it++)
+  {
+    retval.push_back(*it);
+  }
 }
 
+/*
 // higher-level function that performs the raytracing when the LOR is given by s, t, phi and theta coordinates
 // instead of the start and endpoint coordinates directly
 // just do 1 LOR, returns true if lor is not empty
@@ -588,8 +600,10 @@ ray_trace_one_lor(TFRayTracer& rtr,
 
   assert(lor.size() == 0);
 
+  
   /* Find Intersection points of LOR and image FOV (assuming infinitely long scanner)*/
   /* (in voxel units) */
+/*
   CartesianCoordinate3D<float> start_point;  
   CartesianCoordinate3D<float> stop_point;
   {
@@ -599,6 +613,7 @@ ray_trace_one_lor(TFRayTracer& rtr,
          Z= t/costheta+offset_in_z - a*tantheta
        find now min_a, max_a such that end-points intersect border of FOV 
     */
+/*
     float max_a;
     float min_a;
     
@@ -629,6 +644,7 @@ ray_trace_one_lor(TFRayTracer& rtr,
         a has to be such that 
         |X| <= fovrad_in_mm &&  |Y| <= fovrad_in_mm
       */
+/*
       if (fabs(cphi) < 1.E-3 || fabs(sphi) < 1.E-3) 
       {
         if (fovrad_in_mm < fabs(s_in_mm))
@@ -724,7 +740,7 @@ ray_trace_one_lor(TFRayTracer& rtr,
   }
 
 }
-
+*/
 //////////////////////////////////////
 // this function is supposed to stitch together the LORs (multiple for averaging etc.) which are then passed to the RT to make up the matrix element from (?)
 ///////////////////////////////////////
@@ -898,6 +914,7 @@ calculate_proj_matrix_elems_for_one_bin(
 
   if (num_tangential_LORs == 1)
   {
+    /*
     // get TOR just by one LOR in its center. not a very good approximation
     ray_trace_one_lor((TFRayTracer&)rtr, lor, s_in_mm, t_in_mm, 
                         cphi, sphi, costheta, tantheta, 
@@ -905,6 +922,11 @@ calculate_proj_matrix_elems_for_one_bin(
                         voxel_size,
                         restrict_to_cylindrical_FOV,
                         num_lors_per_axial_pos);    
+    */
+    
+    std::cout << "trace only one LOR per TOR" << std::endl;
+
+    scheduleLOR(s_in_mm, t_in_mm, cphi, sphi, costheta, tantheta, offset_in_z, fovrad_in_mm, restrict_to_cylindrical_FOV, num_lors_per_axial_pos);
   }
   else
   {
@@ -924,14 +946,12 @@ calculate_proj_matrix_elems_for_one_bin(
     // do here the ray tracing of all the LORs needed for the matrix element
     for (int s_LOR_num=1; s_LOR_num<=num_tangential_LORs; ++s_LOR_num, current_s_in_mm+=s_inc)
     {
+      scheduleLOR(current_s_in_mm, t_in_mm, cphi, sphi, costheta, tantheta, offset_in_z, fovrad_in_mm, restrict_to_cylindrical_FOV, num_lors_per_axial_pos*num_tangential_LORs);
+
+      /*
       // get rid of the old result
       ray_traced_lor.erase();
-      
-      // replace this with a call to "scheduleLOR" (a private function of this class) that takes the same high-level parameters
 
-      // store the new one
-
-      // replace this with a call to scheduleLOR, with (about) the same arguments
       ray_trace_one_lor((TFRayTracer&)rtr, ray_traced_lor, current_s_in_mm, t_in_mm, 
                           cphi, sphi, costheta, tantheta, 
                           offset_in_z, fovrad_in_mm, 
@@ -942,11 +962,14 @@ calculate_proj_matrix_elems_for_one_bin(
 
       // and put it together with the previous ones
       lor.merge(ray_traced_lor);
+      */
     }
   }
 
   // here, call "execute" (also a private function of this class), that will put the scheduled points onto TF and return a LOR-object
   // (i.e. the type that will also be the output of the original calculate_proj_matrix_element). Can then use this object directly further below!
+
+  execute(lor);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
       

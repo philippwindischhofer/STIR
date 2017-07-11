@@ -67,6 +67,9 @@ class TFRayTracer
   int chunksize;
   int cur_pos;
 
+  std::vector<ProjMatrixElemsForOneBinValue> temp_storage;
+  void executeInternal();
+
   public:
 TFRayTracer(int chunksize);
   ~TFRayTracer();
@@ -76,7 +79,7 @@ TFRayTracer(int chunksize);
   void setVoxelSize(CartesianCoordinate3D<float>& voxel_size);
 
   // puts a new point into place
-  Succeeded schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const);
+  void schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const);
 
   // acts on all elements at once with the ray tracer and put the result into "retval". Returns the total number of points that have been operated on
   int execute(std::vector<ProjMatrixElemsForOneBinValue>& retval);

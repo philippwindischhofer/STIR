@@ -28,6 +28,8 @@ TFRayTracer::TFRayTracer(int chunksize) : session(NewSession(tensorflow::Session
   norm_const_in_tensor.setZero();
   voxel_size_in_tensor.setZero();
 
+  temp_storage.clear();
+
   Scope root = Scope::NewRootScope();
 
   GraphDef def;
@@ -52,10 +54,8 @@ TFRayTracer::~TFRayTracer()
    voxel_size_in_tensor(2) = voxel_size.z();
  }
 
- Succeeded TFRayTracer::schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const)
+ void TFRayTracer::schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const)
 {
-  Succeeded retval = Succeeded::no;
-
   // put the new point and its auxiliary information into the input tensors, if there is still free space
   if(cur_pos < chunksize)
   {
@@ -70,16 +70,18 @@ TFRayTracer::~TFRayTracer()
     norm_const_in_tensor(cur_pos) = norm_const;
 
     cur_pos++;
-    retval = Succeeded::yes;
   }
-
-   return retval;
+  else
+  {
+    // input queue is full, have to execute the points scheduled so far, and store them in the private output queue
+    // std::cout << "execute internal was called" << std::endl;
+    executeInternal();
+  }
 }
 
- int TFRayTracer::execute(std::vector<ProjMatrixElemsForOneBinValue>& retval)
+void TFRayTracer::executeInternal()
 {
    std::vector<Tensor> outputs;
-   int number_traced = cur_pos;
 
    // collects all input parameters to the ray marcher
    std::vector<std::pair<string, Tensor>> inputs = {
@@ -103,95 +105,34 @@ TFRayTracer::~TFRayTracer()
    // LOI | voxel index x | voxel index y | voxel index z
    auto rt_result = outputs[0].tensor<float, 2>();
 
-   // go through the list and put it into the actual return value structure
-   for(int ii = 0; ii < rt_result.dimension(0); ii++)
+   // go through the list and put it into the actual return value structure. Must get back exactly as many results as were put in, prescribed by "cur_pos"!
+   for(int ii = 0; ii < cur_pos; ii++)
      {
-
        CartesianCoordinate3D<int> cur_voxel(rt_result(ii, 3), rt_result(ii, 2), rt_result(ii, 1));
        float cur_val = rt_result(ii, 0);
       
-       retval.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
+       temp_storage.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
 
-       //std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
+       // std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
 	 
      }   
 
+   // reset the position for the input queue
    cur_pos = 0;
+}
+
+ int TFRayTracer::execute(std::vector<ProjMatrixElemsForOneBinValue>& retval)
+{
+   // now the input buffer may not be full. So, run first the internal execution, and then return the contents of the internal storage and the total number of treated voxels
+   executeInternal();
+   int number_traced = temp_storage.size();
+
+   // append the contents of the temporary storage to the contents of retval (do not overwrite anything)
+   retval.insert(std::end(retval), std::begin(temp_storage), std::end(temp_storage));
+
+   temp_storage.clear();
+  
    return number_traced;
 }
 
-// legacy function that traces an explicitely given LOR -> will be discontinued soon
-void TFRayTracer::RayTraceVoxelsOnCartesianGridTF
-        (ProjMatrixElemsForOneBin& lor, 
-         const CartesianCoordinate3D<float>& start_point, 
-         const CartesianCoordinate3D<float>& stop_point, 
-         const CartesianCoordinate3D<float>& voxel_size,
-         const float normalisation_constant)
-{
-
-  const float shift_x = 100.f;
-  const float shift_y = 100.f;
-  const float shift_z = 50.;
-
-  /*
-  std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
-  std::cout << stop_point.x() << " / " << stop_point.y() << " / " << stop_point.z() << std::endl;
- 
-  std::cout << voxel_size.x() << " / " << voxel_size.y() << " / " << voxel_size.z() << std::endl;
- 
-  std::cout << normalisation_constant << std::endl;
-  */
-
-  tensorflow::Input::Initializer voxel_dimensions({voxel_size.x(), voxel_size.y(), voxel_size.z()});
-  Tensor voxel_dimensions_in = voxel_dimensions.tensor;
-
-  // convert the voxel coordinates into actual, physically meaningful numbers
-  tensorflow::Input::Initializer testlor({ {{(start_point.x() + shift_x) * voxel_size.x(), 
-	    (start_point.y() + shift_y) * voxel_size.y(), 
-	    (start_point.z() + shift_z) * voxel_size.z()}, 
-	  {(stop_point.x() + shift_x) * voxel_size.x(), 
-	      (stop_point.y() + shift_y) * voxel_size.y(), 
-	      (stop_point.z() + shift_z) * voxel_size.z() }} });
-
-  //std::cout << (start_point.x() + shift_x) * voxel_size.x() << " / " << (start_point.y() + shift_y) * voxel_size.y() << " / " << (start_point.z() + shift_z) * voxel_size.z() << " // " << (stop_point.x() + shift_x) * voxel_size.x() << " / " << (stop_point.y() + shift_y) * voxel_size.y() << " / " << (stop_point.z() + shift_z) * voxel_size.z() << std::endl;
-
-  Tensor testlor_in = testlor.tensor;
-  // std::cout << testlor_in.tensor<float,3>() << std::endl;
-  // std::cout << voxel_dimensions_in.tensor<float,1>() << std::endl;
-
-  tensorflow::Input::Initializer norm_const({normalisation_constant});
-  Tensor norm_const_in = norm_const.tensor;
-
-  //Tensor testlor_in = build_lor(start_point, stop_point, shift_x, shift_y, shift_z);
-
-  std::vector<Tensor> outputs;
-
-  std::vector<std::pair<string, Tensor>> inputs = {
-    {"lor", testlor_in}, 
-    {"voxel_dims", voxel_dimensions_in},
-    {"norm_const", norm_const_in}
-  };
-
-  TF_CHECK_OK(session -> Run(inputs, {"la"}, {}, &outputs));
-  auto lengtharr = outputs[0].tensor<float, 2>();
-  
-  // now go through the returned array and extract the coordinates of the voxels and the intersection lengths
-  for(int ii = 0; ii < lengtharr.dimension(0); ii++)
-  {
-    //std::cout << std::isnormal(lengtharr(ii, 0)) << std::endl;
-    // format: (intersection length, x, y, z)
-    if(std::isnormal(lengtharr(ii, 0)))
-    {
-      CartesianCoordinate3D<int> cur_voxel(lengtharr(ii, 3) - shift_z, lengtharr(ii, 2) - shift_y, lengtharr(ii, 1) - shift_x);
-      float cur_val = lengtharr(ii, 0);
-      
-      lor.push_back(ProjMatrixElemsForOneBin::value_type(cur_voxel, cur_val));
-
-      //std::cout << cur_voxel.x() << " / " << cur_voxel.y() << " / " << cur_voxel.z() << " -- " << cur_val << std::endl;
-
-    }
-  }
-
- // std::cout << "end raytracer" << std::endl;
-}
 END_NAMESPACE_STIR
