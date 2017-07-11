@@ -136,6 +136,12 @@ public :
 
   void check_status();
 
+  int execute(std::vector<ProjMatrixElemsForOneBin>& retval) const;
+
+  // these are the new functions
+  // schedules a new matrix element for evaluation (i.e. appends it to some internal queue)
+  void schedule_matrix_elems_for_one_bin(Bin bin) const;
+
   //! Stores all necessary geometric info
   /*! Note that the density_info_ptr is not stored in this object. It's only used to get some info on sizes etc.
   */
@@ -181,11 +187,15 @@ public :
 
 private:
   mutable TFRayTracer rtr;
+  mutable std::vector<Bin> bins;
+  mutable std::vector<int> num_points;
 
-  // private functions to prepare a LOR for execution, and to actually execute this LOR
-  void scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
+  // private functions to prepare a LOR for execution, and to actually execute this LOR.
+  // returns the number of points that were scheduled for this LOR
+  int scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
 
-  void execute(ProjMatrixElemsForOneBin& retval) const;
+  // evaluates all matrix elements in the queue and returns their results
+  // void execute(std::vector<ProjMatrixElemsForOneBin>);
 
   //! variable to keep track if setup is called already
   /*! Using any of the \c set function will set it to false, so you will have to call setup() again.
@@ -217,13 +227,6 @@ private:
   virtual void 
     calculate_proj_matrix_elems_for_one_bin(
                                             ProjMatrixElemsForOneBin&) const;
-
-  // these are the new functions
-  // schedules a new matrix element for evaluation (i.e. appends it to some internal queue)
-  void schedule_matrix_elems_for_one_bin(ProjMatrixElemsForOneBin&);
-
-  // evaluates all matrix elements in the queue and returns their results
-  void execute(std::vector<ProjMatrixElemsForOneBin>);
 
   virtual void set_defaults();
   virtual void initialise_keymap();
