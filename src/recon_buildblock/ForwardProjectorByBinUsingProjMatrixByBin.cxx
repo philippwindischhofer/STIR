@@ -160,6 +160,10 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 		  proj_matrix_rows.clear();		  
 		  
 		  proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
+
+		  //Bin bin2(segment_num, view_num, ax_pos, tang_pos + 1, 0);
+		  //proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin2);
+
 		  proj_matrix_ptr_tf -> execute(proj_matrix_rows);
 
 		  proj_matrix_rows[0].forward_project(bin,image);		  

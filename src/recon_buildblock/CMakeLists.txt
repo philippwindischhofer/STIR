@@ -23,7 +23,6 @@ set(CMAKE_CXX_STANDARD 11)
 set (dir_LIB_SOURCES ${dir}_LIB_SOURCES)
 
 set(${dir_LIB_SOURCES}
- #recon_buildblock_registries
  ForwardProjectorByBin 
 	ForwardProjectorByBinUsingRayTracing 
 	ForwardProjectorByBinUsingRayTracing_Siddon 

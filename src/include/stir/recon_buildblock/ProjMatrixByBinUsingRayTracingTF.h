@@ -29,6 +29,7 @@
 #ifndef __ProjMatrixByBinUsingRayTracingTF__
 #define __ProjMatrixByBinUsingRayTracingTF__
 
+#include "stir/recon_buildblock/DataSymmetriesForBins_PET_CartesianGrid.h"
 #include "stir/RegisteredParsingObject.h"
 #include "stir/recon_buildblock/ProjMatrixByBin.h"
 
@@ -41,6 +42,39 @@ START_NAMESPACE_STIR
 
 template <int num_dimensions, typename elemT> class DiscretisedDensity;
 class ProjDataInfo;
+
+
+// small class for the queue
+class ProjMatrixByBinQueue
+{
+ public:
+  ProjMatrixByBinQueue();
+  ProjMatrixByBinQueue& operator=(const ProjMatrixByBinQueue&) = delete;
+
+  void clear() const;
+
+  void push_back(Bin new_bin, std::unique_ptr<SymmetryOperation> new_symm_ptr, int new_num_points, bool new_is_cached, bool new_is_basic_bin) const;
+
+  void push_back_bin(Bin new_bin, int new_num_points, bool new_is_cached) const;
+  void push_back_basic_bin(Bin new_bin, std::unique_ptr<SymmetryOperation> new_symm_ptr, int new_num_points, bool new_is_cached) const;
+
+  void update_num_points(int new_num_points) const;
+  
+  int get_num_points(int index) const;
+  bool is_element_cached(int index) const;
+  bool is_element_basic(int index) const;
+  std::unique_ptr<SymmetryOperation> get_symm_ptr(int index) const;
+  Bin get_bin(int index) const;  
+
+  int get_size() const;
+
+ private:
+  mutable std::vector<Bin> bins;
+  mutable std::vector<std::unique_ptr<SymmetryOperation>> symm_ptrs; // need the symmetry information to see how we arrived at this bin
+  mutable std::vector<int> num_points;
+  mutable std::vector<bool> is_cached;
+  mutable std::vector<bool> is_basic_bin;
+};
 
 /*!
   \ingroup projection
@@ -183,17 +217,12 @@ public :
 
 private:
   mutable TFRayTracer rtr;
+  mutable ProjMatrixByBinQueue queue;
 
-  // TODO: perhaps put these three into a queue class of its own?
-  mutable std::vector<Bin> bins;
-  mutable std::vector<std::auto_ptr<SymmetryOperation>> symm_ptrs;
-  mutable std::vector<int> num_points;
-  mutable std::vector<bool> is_cached;
-  mutable std::vector<bool> is_basic_bin;
-
-  void schedule_matrix_elems_for_caching(Bin bin, bool basic_bin_status) const;
-  void schedule_matrix_elems_for_calculation(Bin bin, bool basic_bin_status) const;
-
+  void schedule_matrix_elems_for_caching(Bin bin) const;
+  void schedule_basic_matrix_elems_for_caching(Bin bin, std::unique_ptr<SymmetryOperation> symm) const;
+  void schedule_basic_matrix_elems_for_calculation(Bin bin, std::unique_ptr<SymmetryOperation> symm) const; // submits a *simple* bin to the calculation queue
+  
   // private functions to prepare a LOR for execution, and to actually execute this LOR.
   // returns the number of points that were scheduled for this LOR
   int scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
@@ -234,9 +263,7 @@ private:
   virtual bool post_processing();
 };
 
+
 END_NAMESPACE_STIR
 
 #endif
-
-
-

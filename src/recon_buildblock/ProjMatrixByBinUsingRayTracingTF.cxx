@@ -47,7 +47,6 @@
  */
 
 #include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracingTF.h"
-#include "stir/recon_buildblock/DataSymmetriesForBins_PET_CartesianGrid.h"
 #include "stir/VoxelsOnCartesianGrid.h"
 #include "stir/ProjDataInfo.h"
 
@@ -287,11 +286,7 @@ set_up(
  
   voxel_size = image_info_ptr->get_voxel_size();
 
-  bins.clear();
-  is_cached.clear();
-  is_basic_bin.clear();
-  symm_ptrs.clear();
-  num_points.clear();
+  queue.clear();
 
   // now that the voxel size is known, communicate it to the ray-tracing object
   rtr.setVoxelSize(voxel_size);
@@ -506,7 +501,7 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
     {
       // find basic bin
       Bin basic_bin = bin;    
-      symm_ptrs.push_back(symmetries_ptr->find_symmetry_operation_from_basic_bin(basic_bin));
+      std::unique_ptr<SymmetryOperation> symm_ptr = symmetries_ptr -> find_symmetry_operation_from_basic_bin(basic_bin);
     
       ProjMatrixElemsForOneBin temp;
       temp.set_bin(basic_bin);
@@ -516,13 +511,13 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
 	{
 	  //std::cout << "scheduled for computation" << std::endl;
 	  // not in the cache, schedule the computation of the basic_bin
-	  schedule_matrix_elems_for_calculation(basic_bin, true);
+	  schedule_basic_matrix_elems_for_calculation(basic_bin, std::move(symm_ptr)); // only basic bins are ever calculated!
 	}
       else
 	{
 	  //std::cout << "scheduled for caching" << std::endl;
 	  // found the basic bin in the cache
-	  schedule_matrix_elems_for_caching(basic_bin, true);
+	  schedule_basic_matrix_elems_for_caching(basic_bin, std::move(symm_ptr));
 	}
     }
   else // !cache_stores_only_basic_bins
@@ -537,7 +532,7 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
 	{
 	  // find basic bin
 	  Bin basic_bin = bin;  
-	  symm_ptrs.push_back(symmetries_ptr->find_symmetry_operation_from_basic_bin(basic_bin));
+	  std::unique_ptr<SymmetryOperation> symm_ptr = symmetries_ptr -> find_symmetry_operation_from_basic_bin(basic_bin);
 
 	  temp.set_bin(basic_bin);
 	  // check if basic bin is in cache
@@ -545,33 +540,34 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
 	      Succeeded::no)
 	    {
 	      // now need to calculate the actual matrix element (not even its basic_bin is in the cache)
-	      schedule_matrix_elems_for_calculation(basic_bin, true);
+	      schedule_basic_matrix_elems_for_calculation(basic_bin, std::move(symm_ptr));
 	    }
 	  else
 	    {
-	      schedule_matrix_elems_for_caching(basic_bin, true);
+	      schedule_basic_matrix_elems_for_caching(basic_bin, std::move(symm_ptr));
 	    }  
 	}
       else
 	{
-	  schedule_matrix_elems_for_caching(bin, false);
+	  schedule_matrix_elems_for_caching(bin);
 	}
     }  
 }
 
-void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_caching(Bin bin, bool basic_bin_status) const
+void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_caching(Bin bin) const
 {
-  bins.push_back(bin);
-  is_cached.push_back(true); // note down that this matrix element can be retrieved from the cache upon execute() is called
-  is_basic_bin.push_back(basic_bin_status); // don't care about this anyways in this case
+  queue.push_back_bin(bin, 0, true);
 }
 
-void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_calculation(Bin bin, bool basic_bin_status) const
+void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_caching(Bin bin, std::unique_ptr<SymmetryOperation> symm) const
 {
-  // retain the input data
-  bins.push_back(bin);
-  is_cached.push_back(false);
-  is_basic_bin.push_back(basic_bin_status);
+  queue.push_back_basic_bin(bin, std::move(symm), 0, true);
+}
+
+void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculation(Bin bin, std::unique_ptr<SymmetryOperation> symm) const
+{
+  queue.push_back_basic_bin(bin, std::move(symm), 0, false);
+
   int cur_num_points = 0;
 
   // now start obtaining the coordinates that parametrize the LOR that corresponds to the BIN. 
@@ -727,16 +723,6 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_calculation(Bin
 
   if (num_tangential_LORs == 1)
   {
-    /*
-    // get TOR just by one LOR in its center. not a very good approximation
-    ray_trace_one_lor((TFRayTracer&)rtr, lor, s_in_mm, t_in_mm, 
-                        cphi, sphi, costheta, tantheta, 
-                        offset_in_z, fovrad_in_mm, 
-                        voxel_size,
-                        restrict_to_cylindrical_FOV,
-                        num_lors_per_axial_pos);    
-    */
-    
     std::cout << "trace only one LOR per TOR" << std::endl;
 
     cur_num_points += scheduleLOR(s_in_mm, t_in_mm, cphi, sphi, costheta, tantheta, offset_in_z, fovrad_in_mm, restrict_to_cylindrical_FOV, num_lors_per_axial_pos);
@@ -765,7 +751,8 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_calculation(Bin
   }
   
   // store the total number of points for this matrix element as well
-  num_points.push_back(cur_num_points);
+  //num_points.push_back(cur_num_points);
+  queue.update_num_points(cur_num_points);
 }
 
 int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneBin>& retval) const
@@ -786,37 +773,42 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
   ProjMatrixElemsForOneBin cur;
   int cur_point = 0;
 
-  for(unsigned int ii = 0; ii < bins.size(); ii++)
+  for(int ii = 0; ii < queue.get_size(); ii++)
     {
       cur.erase();
-      cur.set_bin(bins[ii]);
+      cur.set_bin(queue.get_bin(ii));
 
       // what happens next depends on the status
-      if(is_cached[ii])
+      if(queue.is_element_cached(ii))
 	{
 	  //std::cout << "read from cache" << std::endl;
 	  get_cached_proj_matrix_elems_for_one_bin(cur);
 
-	  if(is_basic_bin[ii])
+	  if(queue.is_element_basic(ii))
 	    {
-	      symm_ptrs[ii]->transform_proj_matrix_elems_for_one_bin(cur);  
+	      std::unique_ptr<SymmetryOperation> symm_ptr = queue.get_symm_ptr(ii);
+	      if(symm_ptr.get())
+	        symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
 	    }
 	}
       else
 	{
 	  // std::cout << "executed " << bins[ii].axial_pos_num() << " / " << bins[ii].tangential_pos_num() << std::endl;
 
-	  //std::cout << "read from computed results" << std::endl;
-
 	  // fill the LOR with the elements that belong to it
-	  for(int jj = 0; jj < num_points[ii]; jj++, cur_point++)
+	  for(int jj = 0; jj < queue.get_num_points(ii); jj++, cur_point++)
 	    {
 	      cur.push_back(res[cur_point]);
 	    }
 
 	  //std::cout << "put new basic bin into cache" << std::endl;
 	  cache_proj_matrix_elems_for_one_bin(cur);
-	  symm_ptrs[ii]->transform_proj_matrix_elems_for_one_bin(cur);  
+
+	  std::unique_ptr<SymmetryOperation> symm_ptr = queue.get_symm_ptr(ii);
+
+	  if(symm_ptr.get())
+	    symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
+
 	  
 	  if(!cache_stores_only_basic_bins)
 	    {
@@ -828,11 +820,7 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
     }
 
   // reset all the controlling variables to their default values
-  bins.clear();
-  num_points.clear();
-  is_cached.clear();
-  is_basic_bin.clear();
-  symm_ptrs.clear();
+  queue.clear();
 
   return num_traced;
 }
@@ -844,17 +832,14 @@ ProjMatrixByBinUsingRayTracingTF::
 calculate_proj_matrix_elems_for_one_bin(
                                         ProjMatrixElemsForOneBin& lor) const
 {
-
   // use the batch mode infrastructure to sort this out (in this case the usage is trivial since only a single matrix element is computed)
-  schedule_matrix_elems_for_calculation(lor.get_bin(), true);
-
-  //schedule_matrix_elems_for_one_bin(lor.get_bin());
+  std::unique_ptr<SymmetryOperation> nptr;
+  nptr.release();
+  schedule_basic_matrix_elems_for_calculation(lor.get_bin(), std::move(nptr));
   
   std::vector<ProjMatrixElemsForOneBin> retval;
 
   int num_traced = execute(retval);
-
-  //std::cout << "traced " << num_traced << " LOIs for this matrix element" << std::endl;
 
   lor = retval[0];
 }
@@ -1027,6 +1012,79 @@ static void merge_zplus1(ProjMatrixElemsForOneBin& lor)
   //cerr << "after check_St\n";
 }
 #endif
+
+//////////////////////
+ProjMatrixByBinQueue::ProjMatrixByBinQueue()
+{
+  clear();
+}
+
+void ProjMatrixByBinQueue::clear() const
+{
+  bins.clear();
+  symm_ptrs.clear();
+  num_points.clear();
+  is_cached.clear();
+  is_basic_bin.clear();
+}
+
+void ProjMatrixByBinQueue::push_back(Bin new_bin, std::unique_ptr<SymmetryOperation> new_symm_ptr, int new_num_points, bool new_is_cached, bool new_is_basic_bin) const
+{
+  bins.push_back(new_bin);
+ 
+  symm_ptrs.push_back(std::move(new_symm_ptr));
+
+  num_points.push_back(new_num_points);
+  is_cached.push_back(new_is_cached);
+  is_basic_bin.push_back(new_is_basic_bin);
+}
+
+void ProjMatrixByBinQueue::push_back_bin(Bin new_bin, int new_num_points, bool new_is_cached) const
+{
+  std::unique_ptr<SymmetryOperation> nptr;
+  nptr.release();
+  push_back(new_bin, std::move(nptr), new_num_points, new_is_cached, false);
+}
+
+void ProjMatrixByBinQueue::push_back_basic_bin(Bin new_bin, std::unique_ptr<SymmetryOperation> new_symm_ptr, int new_num_points, bool new_is_cached) const
+{
+  push_back(new_bin, std::move(new_symm_ptr), new_num_points, new_is_cached, true);
+}
+
+void ProjMatrixByBinQueue::update_num_points(int new_num_points) const
+{
+  num_points.back() = new_num_points;
+}
+
+int ProjMatrixByBinQueue::get_num_points(int index) const
+{
+  return num_points[index];
+}
+
+bool ProjMatrixByBinQueue::is_element_cached(int index) const
+{
+  return is_cached[index];
+}
+
+bool ProjMatrixByBinQueue::is_element_basic(int index) const
+{
+  return is_basic_bin[index];
+}
+
+std::unique_ptr<SymmetryOperation> ProjMatrixByBinQueue::get_symm_ptr(int index) const
+{
+  return std::move(symm_ptrs[index]);
+}
+
+Bin ProjMatrixByBinQueue::get_bin(int index) const
+{
+  return bins[index];
+}
+
+int ProjMatrixByBinQueue::get_size() const
+{
+  return bins.size();
+}
 
 END_NAMESPACE_STIR
 
