@@ -134,13 +134,9 @@ public :
   //! Default constructor (calls set_defaults())
   ProjMatrixByBinUsingRayTracingTF();
 
-  void check_status();
-
-  int execute(std::vector<ProjMatrixElemsForOneBin>& retval) const;
-
-  // these are the new functions
   // schedules a new matrix element for evaluation (i.e. appends it to some internal queue)
   void schedule_matrix_elems_for_one_bin(Bin bin) const;
+  int execute(std::vector<ProjMatrixElemsForOneBin>& retval) const;
 
   //! Stores all necessary geometric info
   /*! Note that the density_info_ptr is not stored in this object. It's only used to get some info on sizes etc.
@@ -187,15 +183,20 @@ public :
 
 private:
   mutable TFRayTracer rtr;
+
+  // TODO: perhaps put these three into a queue class of its own?
   mutable std::vector<Bin> bins;
+  mutable std::vector<std::auto_ptr<SymmetryOperation>> symm_ptrs;
   mutable std::vector<int> num_points;
+  mutable std::vector<bool> is_cached;
+  mutable std::vector<bool> is_basic_bin;
+
+  void schedule_matrix_elems_for_caching(Bin bin, bool basic_bin_status) const;
+  void schedule_matrix_elems_for_calculation(Bin bin, bool basic_bin_status) const;
 
   // private functions to prepare a LOR for execution, and to actually execute this LOR.
   // returns the number of points that were scheduled for this LOR
   int scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
-
-  // evaluates all matrix elements in the queue and returns their results
-  // void execute(std::vector<ProjMatrixElemsForOneBin>);
 
   //! variable to keep track if setup is called already
   /*! Using any of the \c set function will set it to false, so you will have to call setup() again.

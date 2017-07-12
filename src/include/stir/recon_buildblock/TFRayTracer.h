@@ -76,6 +76,8 @@ TFRayTracer(int chunksize);
   TFRayTracer(const TFRayTracer&) = delete;
   TFRayTracer& operator=(const TFRayTracer&) = delete;
 
+  int getQueueLength();
+
   void setVoxelSize(CartesianCoordinate3D<float>& voxel_size);
 
   // puts a new point into place

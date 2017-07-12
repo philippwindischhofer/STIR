@@ -47,6 +47,11 @@ TFRayTracer::~TFRayTracer()
   TF_CHECK_OK(session -> Close());
 }
 
+int TFRayTracer::getQueueLength()
+{
+  return cur_pos;
+}
+
  void TFRayTracer::setVoxelSize(CartesianCoordinate3D<float>& voxel_size)
  {
    voxel_size_in_tensor(0) = voxel_size.x(); 
@@ -123,16 +128,19 @@ void TFRayTracer::executeInternal()
 
  int TFRayTracer::execute(std::vector<ProjMatrixElemsForOneBinValue>& retval)
 {
-   // now the input buffer may not be full. So, run first the internal execution, and then return the contents of the internal storage and the total number of treated voxels
-   executeInternal();
-   int number_traced = temp_storage.size();
+  if(getQueueLength() == 0)
+    return 0;
 
-   // append the contents of the temporary storage to the contents of retval (do not overwrite anything)
-   retval.insert(std::end(retval), std::begin(temp_storage), std::end(temp_storage));
+  // now the input buffer may not be full. So, run first the internal execution, and then return the contents of the internal storage and the total number of treated voxels
+  executeInternal();
+  int number_traced = temp_storage.size();
 
-   temp_storage.clear();
+  // append the contents of the temporary storage to the contents of retval (do not overwrite anything)
+  retval.insert(std::end(retval), std::begin(temp_storage), std::end(temp_storage));
+
+  temp_storage.clear();
   
-   return number_traced;
+  return number_traced;
 }
 
 END_NAMESPACE_STIR

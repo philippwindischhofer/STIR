@@ -255,11 +255,6 @@ set_do_symmetry_shift_z(bool val)
   this->do_symmetry_shift_z = val;
 }
 
-void ProjMatrixByBinUsingRayTracingTF::check_status()
-{
-  std::cout << " cast worked " << std::endl;
-}
-
 //******************** actual implementation *************
 
 #if 0
@@ -293,8 +288,10 @@ set_up(
   voxel_size = image_info_ptr->get_voxel_size();
 
   bins.clear();
+  is_cached.clear();
+  is_basic_bin.clear();
+  symm_ptrs.clear();
   num_points.clear();
-  num_points.push_back(0);
 
   // now that the voxel size is known, communicate it to the ray-tracing object
   rtr.setVoxelSize(voxel_size);
@@ -501,11 +498,80 @@ int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, 
   return cur_num_points;
 }
 
-
 void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin) const
+{
+  // need to figure out here whether the matrix element needs to be computed or merely retrieved from the cache. Call one of the two dedicated scheduling functions to do the job
+
+  if (cache_stores_only_basic_bins)
+    {
+      // find basic bin
+      Bin basic_bin = bin;    
+      symm_ptrs.push_back(symmetries_ptr->find_symmetry_operation_from_basic_bin(basic_bin));
+    
+      ProjMatrixElemsForOneBin temp;
+      temp.set_bin(basic_bin);
+      // check if basic bin is in cache  
+      if (get_cached_proj_matrix_elems_for_one_bin(temp) ==
+	  Succeeded::no)
+	{
+	  //std::cout << "scheduled for computation" << std::endl;
+	  // not in the cache, schedule the computation of the basic_bin
+	  schedule_matrix_elems_for_calculation(basic_bin, true);
+	}
+      else
+	{
+	  //std::cout << "scheduled for caching" << std::endl;
+	  // found the basic bin in the cache
+	  schedule_matrix_elems_for_caching(basic_bin, true);
+	}
+    }
+  else // !cache_stores_only_basic_bins
+    {
+      // all matrix elements are (potentially) available in the cache. Can search for them directly, without the detour through a basic_bin
+      ProjMatrixElemsForOneBin temp;
+      temp.set_bin(bin);
+      
+      // check if in cache  
+      if (get_cached_proj_matrix_elems_for_one_bin(temp) ==
+	  Succeeded::no)
+	{
+	  // find basic bin
+	  Bin basic_bin = bin;  
+	  symm_ptrs.push_back(symmetries_ptr->find_symmetry_operation_from_basic_bin(basic_bin));
+
+	  temp.set_bin(basic_bin);
+	  // check if basic bin is in cache
+	  if (get_cached_proj_matrix_elems_for_one_bin(temp) ==
+	      Succeeded::no)
+	    {
+	      // now need to calculate the actual matrix element (not even its basic_bin is in the cache)
+	      schedule_matrix_elems_for_calculation(basic_bin, true);
+	    }
+	  else
+	    {
+	      schedule_matrix_elems_for_caching(basic_bin, true);
+	    }  
+	}
+      else
+	{
+	  schedule_matrix_elems_for_caching(bin, false);
+	}
+    }  
+}
+
+void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_caching(Bin bin, bool basic_bin_status) const
+{
+  bins.push_back(bin);
+  is_cached.push_back(true); // note down that this matrix element can be retrieved from the cache upon execute() is called
+  is_basic_bin.push_back(basic_bin_status); // don't care about this anyways in this case
+}
+
+void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_calculation(Bin bin, bool basic_bin_status) const
 {
   // retain the input data
   bins.push_back(bin);
+  is_cached.push_back(false);
+  is_basic_bin.push_back(basic_bin_status);
   int cur_num_points = 0;
 
   // now start obtaining the coordinates that parametrize the LOR that corresponds to the BIN. 
@@ -699,14 +765,18 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
   }
   
   // store the total number of points for this matrix element as well
-  num_points.push_back(num_points.back() + cur_num_points);
+  num_points.push_back(cur_num_points);
 }
 
 int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneBin>& retval) const
 {
+  //std::cout << rtr.getQueueLength() << " points waiting" << std::endl;
+
   // execute it such that get the list of all LOIs
   std::vector<ProjMatrixElemsForOneBinValue> res;
   int num_traced = rtr.execute(res);
+
+  //std::cout << "executed" << bins.size() << "matrix elements" << std::endl;
 
   //std::cout << "in execute: " << bins.size() << "matrix elements" << std::endl;
   //std::cout << "in execute: " << res.size() << "LOIs" << std::endl;
@@ -714,26 +784,45 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
   // iterate through the list of bins / num_points & append the individual LOR objects to the return value vector
 
   ProjMatrixElemsForOneBin cur;
+  int cur_point = 0;
 
   for(unsigned int ii = 0; ii < bins.size(); ii++)
     {
       cur.erase();
       cur.set_bin(bins[ii]);
 
-      // std::cout << "executed " << bins[ii].axial_pos_num() << " / " << bins[ii].tangential_pos_num() << std::endl;
-
-      // fill the LOR with the elements that belong to it (relies on num_bins[0] == 0)
-      for(int jj = num_points[ii]; jj < num_points[ii + 1]; jj++)
+      // what happens next depends on the status
+      if(is_cached[ii])
 	{
-	  cur.push_back(res[jj]);
+	  //std::cout << "read from cache" << std::endl;
+	  get_cached_proj_matrix_elems_for_one_bin(cur);
+
+	  if(is_basic_bin[ii])
+	    {
+	      symm_ptrs[ii]->transform_proj_matrix_elems_for_one_bin(cur);  
+	    }
 	}
-      
-      /*
-      //do the postprocessing here as well
-      Bin basic_bin = bins[ii];    
-      std::auto_ptr<SymmetryOperation> symm_ptr = symmetries_ptr->find_symmetry_operation_from_basic_bin(basic_bin);
-      symm_ptr->transform_proj_matrix_elems_for_one_bin(cur);  
-      */
+      else
+	{
+	  // std::cout << "executed " << bins[ii].axial_pos_num() << " / " << bins[ii].tangential_pos_num() << std::endl;
+
+	  //std::cout << "read from computed results" << std::endl;
+
+	  // fill the LOR with the elements that belong to it
+	  for(int jj = 0; jj < num_points[ii]; jj++, cur_point++)
+	    {
+	      cur.push_back(res[cur_point]);
+	    }
+
+	  //std::cout << "put new basic bin into cache" << std::endl;
+	  cache_proj_matrix_elems_for_one_bin(cur);
+	  symm_ptrs[ii]->transform_proj_matrix_elems_for_one_bin(cur);  
+	  
+	  if(!cache_stores_only_basic_bins)
+	    {
+	      cache_proj_matrix_elems_for_one_bin(cur);
+	    }
+	}
 
       retval.push_back(cur);
     }
@@ -741,10 +830,13 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
   // reset all the controlling variables to their default values
   bins.clear();
   num_points.clear();
-  num_points.push_back(0);
+  is_cached.clear();
+  is_basic_bin.clear();
+  symm_ptrs.clear();
 
   return num_traced;
 }
+
 
 // legacy-compatibility
 void 
@@ -754,7 +846,9 @@ calculate_proj_matrix_elems_for_one_bin(
 {
 
   // use the batch mode infrastructure to sort this out (in this case the usage is trivial since only a single matrix element is computed)
-  schedule_matrix_elems_for_one_bin(lor.get_bin());
+  schedule_matrix_elems_for_calculation(lor.get_bin(), true);
+
+  //schedule_matrix_elems_for_one_bin(lor.get_bin());
   
   std::vector<ProjMatrixElemsForOneBin> retval;
 

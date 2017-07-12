@@ -139,10 +139,9 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 
       // this is the TF-enabled version. to use the new features, need to downcast the pointer first!
       shared_ptr<ProjMatrixByBinUsingRayTracingTF> proj_matrix_ptr_tf = boost::dynamic_pointer_cast<ProjMatrixByBinUsingRayTracingTF> (proj_matrix_ptr);
-
-      proj_matrix_ptr_tf -> check_status();
     
       ProjMatrixElemsForOneBin proj_matrix_row;
+      std::vector<ProjMatrixElemsForOneBin> proj_matrix_rows;
     
       RelatedViewgrams<float>::iterator r_viewgrams_iter = viewgrams.begin();
     
@@ -156,64 +155,17 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 	    {
 	      for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
 		{ 
-		  // The "Bin" class represents a single viewgram bin, with its coordinates and the value attached to it
-		  
 		  Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
-		  //std::cout << "accessing matrix\n";
 
-		  // now run in TF dedicated mode: schedule first all matrix elements that need to be computed
-		  //std::cout << "scheduled " << bin.axial_pos_num() << " / " << bin.tangential_pos_num() << std::endl;
-
+		  proj_matrix_rows.clear();		  
+		  
 		  proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
-		  std::vector<ProjMatrixElemsForOneBin> traced;
-		  proj_matrix_ptr_tf -> execute(traced);
-		  
-		  /*
-		  // the method that computes the matrix element *deletes* whatever content was inside proj_matrix_row before the call (good for us)!
-		  proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
-		  //std::cout << "back in forwardProjector\n";
-		  
-		  proj_matrix_row.forward_project(bin,image);
-		  //std::cout << "do the forward projection\n";
-		  */
-		  traced[0].forward_project(bin,image);
-		  
+		  proj_matrix_ptr_tf -> execute(proj_matrix_rows);
+
+		  proj_matrix_rows[0].forward_project(bin,image);		  
 		  viewgram[ax_pos][tang_pos] = bin.get_bin_value();
-		  //std::cout << "end of block \n";
-		  
 		}
 	    }
-
-	  /*
-	  std::cout << "done with scheduling" << std::endl;
-
-	  // now, execute all scheduled matrix elements
-	  std::vector<ProjMatrixElemsForOneBin> traced;
-	  proj_matrix_ptr_tf -> execute(traced);
-
-	  std::cout << "got back " << traced.size() << " matrix elements" << std::endl;
-
-	  int cur_ind = 0;
-	  
-	  // go through the list of matrix elements and put them to good use
-	  for(std::vector<ProjMatrixElemsForOneBin>::iterator it = traced.begin(); it < traced.end(); it++)
-	    {
-	      Bin cur_bin = it -> get_bin();
-	      it -> forward_project(cur_bin, image);
-
-	      int ax_pos = cur_bin.axial_pos_num();
-	      int tang_pos = cur_bin.tangential_pos_num();
-
-	      std::cout << "read " << ax_pos << " / " << tang_pos << std::endl;
-
-	      viewgram[ax_pos][tang_pos] = cur_bin.get_bin_value();
-	      //std::cout << cur_ind << std::endl;
-	      cur_ind++;
-
-	    }
-	  */
-
-	  //std::cout << "done with forward projecting" << std::endl;
 
 	  ++r_viewgrams_iter; 
 	  

@@ -36,6 +36,7 @@
 */
 
 #include "stir/recon_buildblock/ProjMatrixByBin.h"
+#include "stir/recon_buildblock/ProjMatrixByBinUsingRayTracingTF.h"
 #include "stir/recon_buildblock/BackProjectorByBin.h"
 #include "stir/RegisteredParsingObject.h"
 #include "stir/shared_ptr.h"
@@ -93,6 +94,7 @@ protected:
   shared_ptr<ProjMatrixByBin> proj_matrix_ptr;
 
 private:
+  bool TF_enabled;
   virtual void set_defaults();
   virtual void initialise_keymap();
   virtual bool post_processing();

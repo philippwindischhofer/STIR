@@ -108,6 +108,12 @@ set_up(const shared_ptr<ProjDataInfo>& proj_data_info_ptr,
 
 {    	   
   proj_matrix_ptr->set_up(proj_data_info_ptr, image_info_ptr);
+
+  std::string infostring = proj_matrix_ptr -> get_registered_name();
+  if(infostring == ProjMatrixByBinUsingRayTracingTF::registered_name)
+    TF_enabled = true;
+  else
+    TF_enabled = false;
 }
 
 const DataSymmetriesForViewSegmentNumbers *
@@ -125,6 +131,16 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 {
 
   std::cout << "-- back project by bin using matrix\n";
+
+  shared_ptr<ProjMatrixByBinUsingRayTracingTF> proj_matrix_ptr_tf;
+  std::vector<ProjMatrixElemsForOneBin> proj_matrix_rows;
+
+  if(TF_enabled)
+    {
+      std::cout << "TF available in back projector" << std::endl;
+      proj_matrix_ptr_tf = boost::dynamic_pointer_cast<ProjMatrixByBinUsingRayTracingTF> (proj_matrix_ptr);
+      proj_matrix_rows.clear();
+    }
 
   if (proj_matrix_ptr->is_cache_enabled()/* &&
 					    !proj_matrix_ptr->does_cache_store_only_basic_bins()*/)
@@ -150,7 +166,20 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 		if (viewgram[ax_pos][tang_pos] == 0)
 		  continue;
 		Bin bin(segment_num, view_num, ax_pos, tang_pos, viewgram[ax_pos][tang_pos]);
-		proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
+
+		if(TF_enabled)
+		  {
+		    proj_matrix_rows.clear();
+
+		    proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
+		    proj_matrix_ptr_tf -> execute(proj_matrix_rows);
+
+		    proj_matrix_row = proj_matrix_rows.front();
+		  }
+		else
+		  {
+		    proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
+		  }
 		proj_matrix_row.back_project(image, bin);
 	      }
 	  ++r_viewgrams_iter;   
@@ -181,7 +210,19 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 			  tang_pos);
 	    symmetries->find_basic_bin(basic_bin);
     
-	    proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, basic_bin);
+	    if(TF_enabled)
+	      {
+		proj_matrix_rows.clear();
+
+		proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(basic_bin);
+		proj_matrix_ptr_tf -> execute(proj_matrix_rows);
+
+		proj_matrix_row = proj_matrix_rows.front();
+	      }
+	    else
+	      {
+		proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, basic_bin);
+	      }
       
 	    related_ax_tang_poss.resize(0);
 	    symmetries->get_related_bins_factorised(related_ax_tang_poss,basic_bin,
