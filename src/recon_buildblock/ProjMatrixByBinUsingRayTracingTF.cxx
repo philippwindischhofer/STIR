@@ -58,6 +58,8 @@
 #include <math.h>
 #include <boost/format.hpp>
 
+#include <random>
+
 
 #ifndef STIR_NO_NAMESPACE
 using std::min;
@@ -408,6 +410,10 @@ int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, 
 {
   int cur_num_points = 0;
 
+  std::random_device rd;  //Will be used to obtain a seed for the random number engine
+  std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+  std::uniform_real_distribution<> dis(0, 1);
+
   // first, find the limits for the LOR parameter "a"
   float max_a;
   float min_a;
@@ -473,14 +479,20 @@ int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, 
 
   // then, find points along the LOR and schedule them. Do it randomly, or evenly spaced?? Try both.
   // try it first with equal sampling
-  int resolution = 1;
-  float increment = 1 / (dist * resolution);
+  int resolution = 2;
+  int number_points = int(resolution * dist);
+  //float increment = 1 / (dist * resolution);
+  float increment = 1 / (200.f);
+
+  //std::cout << increment << std::endl;
 
   float normalization_constant = 1. / num_LORs; 
 
-  for(float t = 0; t < 1; t += increment)
+  for(int i = 0; i < number_points; i++)
     {
       CartesianCoordinate3D<float> cur_pos;
+
+      float t = dis(gen);
 
       cur_pos.x() = t * (stop_point.x() - start_point.x()) + start_point.x();
       cur_pos.y() = t * (stop_point.y() - start_point.y()) + start_point.y();
