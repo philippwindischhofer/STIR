@@ -286,6 +286,7 @@ namespace stir
         //loop to receive viewgrams until received END_ITERATION_TAG
         while (true)
           {
+	    std::cout << "iteration start" << std::endl;
             // TODO, get rid of pointers somehow
             RelatedViewgrams<float>* viewgrams = NULL;
             RelatedViewgrams<float>* additive_binwise_correction_viewgrams = NULL;
@@ -418,10 +419,14 @@ namespace stir
             if (viewgrams!=NULL) delete viewgrams;
             if (additive_binwise_correction_viewgrams!=NULL) delete additive_binwise_correction_viewgrams;
             if (mult_viewgrams_ptr!=NULL) delete mult_viewgrams_ptr;
+
+	    std::cout << "new iteration end" << std::endl;
+
           }
         if (distributed::rpc_time)
 	  stir::info(boost::format("Slave %1% used %2% seconds for PRC-processing.")
 		     % my_rank % distributed::total_rpc_time_2);
+
       }         
   }
 

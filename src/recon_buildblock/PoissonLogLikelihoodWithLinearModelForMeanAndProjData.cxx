@@ -904,8 +904,7 @@ void distributable_compute_gradient(const shared_ptr<ForwardProjectorByBin>& for
                                     DistributedCachingInformation* caching_info_ptr
                                     )
 {
-        
-    distributable_computation(forward_projector_sptr,
+  distributable_computation(forward_projector_sptr,
                               back_projector_sptr,
                               symmetries_sptr,
                               &output_image, &input_image,

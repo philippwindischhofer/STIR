@@ -73,6 +73,8 @@
 #endif
 #include "stir/num_threads.h"
 
+#include<chrono>
+
 START_NAMESPACE_STIR
 
 /* WARNING: the sequence of steps here has to match what is on the receiving end 
@@ -426,6 +428,9 @@ void distributable_computation(
     // note: older versions of openmp need an int as loop
     for (int i=0; i<static_cast<int>(vs_nums_to_process.size()); ++i)
       {
+	//std::cout << "viewgram iteration start" << std::endl;
+	auto start_iteration = std::chrono::high_resolution_clock::now();
+
         const ViewSegmentNumbers view_segment_num=vs_nums_to_process[i];
 
         shared_ptr<RelatedViewgrams<float> > y;
@@ -495,6 +500,11 @@ void distributable_computation(
                                         mult_viewgrams_sptr.get());
 #endif // OPENMP                                    
 #endif // MPI
+	  // std::cout << "end viewgram iteration" << std::endl;
+	  auto end_iteration = std::chrono::high_resolution_clock::now();
+	  std::cout << "viewgram=" << std::chrono::duration_cast<std::chrono::milliseconds>(end_iteration-start_iteration).count() << std::endl;	 
+
+
       } // end of for-loop 
   } // end of parallel section of openmp
   

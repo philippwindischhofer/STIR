@@ -129,6 +129,7 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 		    const int min_axial_pos_num, const int max_axial_pos_num,
 		    const int min_tangential_pos_num, const int max_tangential_pos_num)
 {
+  auto started_actual_bw = std::chrono::high_resolution_clock::now();
 
   std::cout << "-- back project by bin using matrix\n";
 
@@ -152,6 +153,8 @@ actual_back_project(DiscretisedDensity<3,float>& image,
       ProjMatrixElemsForOneBin proj_matrix_row;
   
       RelatedViewgrams<float>::const_iterator r_viewgrams_iter = viewgrams.begin();
+
+      auto started_bp = std::chrono::high_resolution_clock::now();
   
       while( r_viewgrams_iter!=viewgrams.end())
 	{
@@ -203,6 +206,10 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 	    }
 	  ++r_viewgrams_iter;   
 	}
+
+      auto finished_bp = std::chrono::high_resolution_clock::now();
+      std::cout << "backprojection=" << std::chrono::duration_cast<std::chrono::milliseconds>(finished_bp - started_bp).count() << std::endl;
+
     }  
   else
     {
@@ -299,6 +306,10 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 		 (max_axial_pos_num - min_axial_pos_num + 1) *
 		 (max_tangential_pos_num - min_tangential_pos_num + 1)));
     }  
+
+  auto finished_actual_bw = std::chrono::high_resolution_clock::now();
+  std::cout << "bw_total=" << std::chrono::duration_cast<std::chrono::milliseconds>(finished_actual_bw - started_actual_bw).count() << std::endl;
+
 }
 
 

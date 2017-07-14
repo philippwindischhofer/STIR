@@ -133,6 +133,8 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 		  const int min_tangential_pos_num, const int max_tangential_pos_num)
 {
 
+  auto started_actual_fw = std::chrono::high_resolution_clock::now();
+
   CPUTimer timer;
   timer.reset();
 
@@ -326,6 +328,9 @@ ForwardProjectorByBinUsingProjMatrixByBin::
     }
 
   std::cout << "end of forward projection\n";
+  auto finished_actual_fw = std::chrono::high_resolution_clock::now();
+  std::cout << "fw_total=" << std::chrono::duration_cast<std::chrono::milliseconds>(finished_actual_fw - started_actual_fw).count() << std::endl;
+
 }
 
 END_NAMESPACE_STIR
