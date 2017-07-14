@@ -80,6 +80,11 @@ capacity() const
   return elements.capacity();
 }
 
+void ProjMatrixElemsForOneBin::push_back_vector(Element_vector::iterator start, Element_vector::iterator end)
+{
+  elements.insert(elements.end(), start, end);
+}
+
 ProjMatrixElemsForOneBin& ProjMatrixElemsForOneBin::operator*=(const float d)
 {
   // KT 21/02/2002 added check on 1
@@ -394,6 +399,7 @@ forward_project(Bin& single,
       if (coords[1] >= density.get_min_index() && coords[1] <= density.get_max_index())
       {
 	// get_value() gives back the LOI
+	// std::cout << coords[1] << " / " << coords[2] << " / " << coords[3] << std::endl;
         single += density[coords[1]][coords[2]][coords[3]] * element_ptr->get_value();
       }
       ++element_ptr;		

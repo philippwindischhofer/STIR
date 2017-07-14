@@ -101,6 +101,7 @@ public:
   typedef value_type& reference;
   typedef const value_type& const_reference;
 
+  
 
   //! constructor
   /*!
@@ -140,6 +141,9 @@ public:
      much overhead.
      */
   inline void push_back( const value_type&);    	
+
+  void push_back_vector(Element_vector::iterator start, Element_vector::iterator end);
+
   //! reserve enough space for max_number elements (but don't fill them in)
   void reserve(size_type max_number);
   //! number of non-zero elements

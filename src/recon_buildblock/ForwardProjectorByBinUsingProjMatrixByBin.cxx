@@ -39,6 +39,8 @@
 #include <vector>
 #include <list>
 
+#include <chrono>
+
 #ifndef STIR_NO_NAMESPACE
 using std::find;
 using std::vector;
@@ -131,6 +133,9 @@ ForwardProjectorByBinUsingProjMatrixByBin::
 		  const int min_tangential_pos_num, const int max_tangential_pos_num)
 {
 
+  CPUTimer timer;
+  timer.reset();
+
   std::cout << "-- forward_project_by_bin actual\n";
 
   if(TF_enabled)
@@ -140,39 +145,61 @@ ForwardProjectorByBinUsingProjMatrixByBin::
       // this is the TF-enabled version. to use the new features, need to downcast the pointer first!
       shared_ptr<ProjMatrixByBinUsingRayTracingTF> proj_matrix_ptr_tf = boost::dynamic_pointer_cast<ProjMatrixByBinUsingRayTracingTF> (proj_matrix_ptr);
     
-      ProjMatrixElemsForOneBin proj_matrix_row;
+      //ProjMatrixElemsForOneBin proj_matrix_row;
       std::vector<ProjMatrixElemsForOneBin> proj_matrix_rows;
-    
       RelatedViewgrams<float>::iterator r_viewgrams_iter = viewgrams.begin();
     
       while( r_viewgrams_iter!=viewgrams.end())
 	{
+	  int matrix_element_cnt = 0;
+
 	  Viewgram<float>& viewgram = *r_viewgrams_iter;
 	  const int view_num = viewgram.get_view_num();
 	  const int segment_num = viewgram.get_segment_num();
+	  
+	  auto started_scheduling = std::chrono::high_resolution_clock::now();
       
 	  for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
 	    {
+
 	      for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
 		{ 
 		  Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
-
-		  proj_matrix_rows.clear();		  
-		  
 		  proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
-
-		  //Bin bin2(segment_num, view_num, ax_pos, tang_pos + 1, 0);
-		  //proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin2);
-
-		  proj_matrix_ptr_tf -> execute(proj_matrix_rows);
-
-		  proj_matrix_rows[0].forward_project(bin,image);		  
-		  viewgram[ax_pos][tang_pos] = bin.get_bin_value();
+		  matrix_element_cnt++;
 		}
 	    }
 
-	  ++r_viewgrams_iter; 
+	  auto started_raytracing = std::chrono::high_resolution_clock::now();
+	  proj_matrix_rows.clear();
+	  proj_matrix_ptr_tf -> execute(proj_matrix_rows);
 	  
+	  auto started_fwprojection = std::chrono::high_resolution_clock::now();
+
+	  int element_cnt = 0;
+	  for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
+	  {
+	      for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
+		{ 
+		  Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
+		  
+		  proj_matrix_rows[element_cnt].forward_project(bin, image);		  
+		  viewgram[ax_pos][tang_pos] = bin.get_bin_value();    
+		  element_cnt++;
+		}
+	    }
+	   
+	  auto done = std::chrono::high_resolution_clock::now();
+
+	  
+	  std::cout << "scheduling=" << std::chrono::duration_cast<std::chrono::milliseconds>(started_raytracing - started_scheduling).count() << std::endl;
+	  std::cout << "ray_tracing=" << std::chrono::duration_cast<std::chrono::milliseconds>(started_fwprojection - started_raytracing).count() << std::endl;	 
+	  std::cout << "forwardprojection=" << std::chrono::duration_cast<std::chrono::milliseconds>(done - started_fwprojection).count() << std::endl;
+	  std::cout << "total=" << std::chrono::duration_cast<std::chrono::milliseconds>(done - started_scheduling).count() << std::endl;
+	  std::cout << "matrix_element_count=" << matrix_element_cnt << std::endl;
+	  
+	  
+	  ++r_viewgrams_iter; 	  
 	}	   
     }
   else
@@ -191,28 +218,35 @@ ForwardProjectorByBinUsingProjMatrixByBin::
     
 	  while( r_viewgrams_iter!=viewgrams.end())
 	    {
+	      auto started = std::chrono::high_resolution_clock::now();
+
 	      Viewgram<float>& viewgram = *r_viewgrams_iter;
 	      const int view_num = viewgram.get_view_num();
 	      const int segment_num = viewgram.get_segment_num();
       
-	      for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
-		for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
-		  { 
-		    // The "Bin" class represents a single viewgram bin, with its coordinates and the value attached to it
-		    Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
-		    //std::cout << "accessing matrix\n";
+	      std::cout << "start_matrix_chunk" << std::endl;
 
-		    // the method that computes the matrix element *deletes* whatever content was inside proj_matrix_row before the call (good for us)!
-		    proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
-		    //std::cout << "back in forwardProjector\n";
-		    proj_matrix_row.forward_project(bin,image);
-		    //std::cout << "do the forward projection\n";
-		    viewgram[ax_pos][tang_pos] = bin.get_bin_value();
-		    //std::cout << "end of block \n";
-		  }
+	      for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
+		{
+		  for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
+		    { 
+		      Bin bin(segment_num, view_num, ax_pos, tang_pos, 0);
+
+		      proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
+		    		    
+		      proj_matrix_row.forward_project(bin,image);
+		      viewgram[ax_pos][tang_pos] = bin.get_bin_value();
+		    }
+		}
+
+	      std::cout << "end_matrix_chunk" << std::endl;
+
+	      auto done = std::chrono::high_resolution_clock::now();
+
+	      std::cout << "total=" << std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count() << std::endl;
+
 	      ++r_viewgrams_iter; 
 	    }	   
-	  //std::cout << "out of loop\n";
 	}
       else
 	{

@@ -60,7 +60,6 @@
 
 #include <random>
 
-
 #ifndef STIR_NO_NAMESPACE
 using std::min;
 using std::max;
@@ -73,7 +72,7 @@ ProjMatrixByBinUsingRayTracingTF::registered_name =
   "Ray Tracing TF";
 
 ProjMatrixByBinUsingRayTracingTF::
-ProjMatrixByBinUsingRayTracingTF() : rtr(2000)
+ProjMatrixByBinUsingRayTracingTF() : rtr(26000000, 200)
 {
   std::cout << "this is ProjMatrixByBinUsingRayTracing TF constructor\n";
   set_defaults();
@@ -401,9 +400,20 @@ float eucl_norm(const CartesianCoordinate3D<float>& in)
   return sqrt(pow(in.x(), 2) + pow(in.y(), 2) + pow(in.z(), 2));
 }
 
-void print_proj_matr_element(ProjMatrixElemsForOneBinValue toprint)
+void print_proj_matr_element_value(ProjMatrixElemsForOneBinValue toprint)
 {
   std::cout << toprint.coord1() << " / " << toprint.coord2() << " / " << toprint.coord3() << " -- " << toprint.get_value() << std::endl;
+}
+
+void print_proj_matr_element(ProjMatrixElemsForOneBin toprint)
+{
+  std::vector<ProjMatrixElemsForOneBinValue>::iterator it(toprint.begin());
+  
+  while(it < toprint.end())
+    {
+      print_proj_matr_element_value(*it);
+      it++;
+    }
 }
 
 int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, float cphi, float sphi, float costheta, float tantheta, float offset_in_z, float fovrad_in_mm, bool restrict_to_cylindrical_FOV, int num_LORs) const
@@ -480,19 +490,19 @@ int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, 
   // then, find points along the LOR and schedule them. Do it randomly, or evenly spaced?? Try both.
   // try it first with equal sampling
   int resolution = 2;
-  int number_points = int(resolution * dist);
-  //float increment = 1 / (dist * resolution);
-  float increment = 1 / (200.f);
+  //int number_points = int(resolution * dist);
+  float increment = 1 / (dist * resolution);
+  int number_points = 1 / increment;
+  //float increment = 1 / (200.f);
 
-  //std::cout << increment << std::endl;
+  float normalization_constant = 1. / (num_LORs * dist); 
 
-  float normalization_constant = 1. / num_LORs; 
-
+  float t = 0;
   for(int i = 0; i < number_points; i++)
     {
       CartesianCoordinate3D<float> cur_pos;
 
-      float t = dis(gen);
+      //float t = dis(gen);
 
       cur_pos.x() = t * (stop_point.x() - start_point.x()) + start_point.x();
       cur_pos.y() = t * (stop_point.y() - start_point.y()) + start_point.y();
@@ -500,15 +510,15 @@ int ProjMatrixByBinUsingRayTracingTF::scheduleLOR(float s_in_mm, float t_in_mm, 
 
       rtr.schedulePoint(cur_pos, ray_vec, normalization_constant);
       cur_num_points++;
+      t += increment;
     }
-
+   
   return cur_num_points;
 }
 
 void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin) const
 {
   // need to figure out here whether the matrix element needs to be computed or merely retrieved from the cache. Call one of the two dedicated scheduling functions to do the job
-
   if (cache_stores_only_basic_bins)
     {
       // find basic bin
@@ -517,17 +527,16 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_matrix_elems_for_one_bin(Bin bin
     
       ProjMatrixElemsForOneBin temp;
       temp.set_bin(basic_bin);
+
       // check if basic bin is in cache  
       if (get_cached_proj_matrix_elems_for_one_bin(temp) ==
 	  Succeeded::no)
 	{
-	  //std::cout << "scheduled for computation" << std::endl;
 	  // not in the cache, schedule the computation of the basic_bin
 	  schedule_basic_matrix_elems_for_calculation(basic_bin, std::move(symm_ptr)); // only basic bins are ever calculated!
 	}
       else
 	{
-	  //std::cout << "scheduled for caching" << std::endl;
 	  // found the basic bin in the cache
 	  schedule_basic_matrix_elems_for_caching(basic_bin, std::move(symm_ptr));
 	}
@@ -641,11 +650,6 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculati
   const float sampling_distance_of_adjacent_LORs_z =
     proj_data_info_ptr->get_sampling_in_t(bin)/costheta;
 
-  // here, have now all the parameters of the LOR extracted & ready to use
-  //////////////////////////////////////////////////////////////////////////////////////////
- 
-  // now, start putting multiple LORs such that their average gives a better result for the actual matrix element
-
   // find number of LORs we have to take, such that we don't miss voxels
   // we have to subtract a tiny amount from the quotient, to avoid having too many LORs
   // solely due to numerical rounding errors
@@ -660,7 +664,6 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculati
   // merging code assumes integer multiple
   assert(fabs(sampling_distance_of_adjacent_LORs_z/voxel_size.z()
               - num_lors_per_axial_pos) <= 1E-4);
-
 
   // find offset in z, taking into account if there are 1 or more LORs
   // KT 20/06/2001 take origin.z() into account
@@ -709,7 +712,6 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculati
         offset_in_z -= .1F*voxel_size.z();
     }
 
-
   // use FOV which is slightly 'inside' the image to avoid
   // index out of range
 
@@ -731,8 +733,6 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculati
   //       to avoid having too many RT iterations) in the region occupied by the TOR
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  //std::cout << num_tangential_LORs << std::endl;
-
   if (num_tangential_LORs == 1)
   {
     std::cout << "trace only one LOR per TOR" << std::endl;
@@ -758,12 +758,10 @@ void ProjMatrixByBinUsingRayTracingTF::schedule_basic_matrix_elems_for_calculati
     for (int s_LOR_num=1; s_LOR_num<=num_tangential_LORs; ++s_LOR_num, current_s_in_mm+=s_inc)
     {
       cur_num_points += scheduleLOR(current_s_in_mm, t_in_mm, cphi, sphi, costheta, tantheta, offset_in_z, fovrad_in_mm, restrict_to_cylindrical_FOV, num_lors_per_axial_pos*num_tangential_LORs);
-
     }
   }
-  
+
   // store the total number of points for this matrix element as well
-  //num_points.push_back(cur_num_points);
   queue.update_num_points(cur_num_points);
 }
 
@@ -775,15 +773,13 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
   std::vector<ProjMatrixElemsForOneBinValue> res;
   int num_traced = rtr.execute(res);
 
-  //std::cout << "executed" << bins.size() << "matrix elements" << std::endl;
-
-  //std::cout << "in execute: " << bins.size() << "matrix elements" << std::endl;
-  //std::cout << "in execute: " << res.size() << "LOIs" << std::endl;
-
-  // iterate through the list of bins / num_points & append the individual LOR objects to the return value vector
-
   ProjMatrixElemsForOneBin cur;
   int cur_point = 0;
+
+  int read_cnt = 0;
+
+  // iterate through the list of bins / num_points & append the individual LOR objects to the return value vector
+  auto started_copy = std::chrono::high_resolution_clock::now();
 
   for(int ii = 0; ii < queue.get_size(); ii++)
     {
@@ -793,34 +789,45 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
       // what happens next depends on the status
       if(queue.is_element_cached(ii))
 	{
-	  //std::cout << "read from cache" << std::endl;
 	  get_cached_proj_matrix_elems_for_one_bin(cur);
 
 	  if(queue.is_element_basic(ii))
 	    {
 	      std::unique_ptr<SymmetryOperation> symm_ptr = queue.get_symm_ptr(ii);
 	      if(symm_ptr.get())
-	        symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
+		{
+		  symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
+		}
 	    }
 	}
       else
 	{
-	  // std::cout << "executed " << bins[ii].axial_pos_num() << " / " << bins[ii].tangential_pos_num() << std::endl;
+	  /*
+	  std::vector<ProjMatrixElemsForOneBinValue>::iterator begin_chunk = res.begin() + cur_point;
+	  if(cur_point + queue.get_num_points(ii) < res.size())
+	    {
+	      cur_point += queue.get_num_points(ii);
+
+	      std::vector<ProjMatrixElemsForOneBinValue>::iterator end_chunk = begin_chunk + queue.get_num_points(ii);
+
+	      cur.push_back_vector(begin_chunk, end_chunk);
+	    }
+	  */
 
 	  // fill the LOR with the elements that belong to it
-	  for(int jj = 0; jj < queue.get_num_points(ii); jj++, cur_point++)
+	  for(int jj = 0; jj < queue.get_num_points(ii) && cur_point < res.size(); jj++, cur_point++)
 	    {
 	      cur.push_back(res[cur_point]);
 	    }
-
-	  //std::cout << "put new basic bin into cache" << std::endl;
+	  
 	  cache_proj_matrix_elems_for_one_bin(cur);
 
 	  std::unique_ptr<SymmetryOperation> symm_ptr = queue.get_symm_ptr(ii);
 
 	  if(symm_ptr.get())
-	    symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
-
+	    {
+	      symm_ptr -> transform_proj_matrix_elems_for_one_bin(cur);  
+	    }
 	  
 	  if(!cache_stores_only_basic_bins)
 	    {
@@ -830,9 +837,14 @@ int ProjMatrixByBinUsingRayTracingTF::execute(std::vector<ProjMatrixElemsForOneB
 
       retval.push_back(cur);
     }
+  
+  auto done_copy = std::chrono::high_resolution_clock::now();
 
-  // reset all the controlling variables to their default values
+  std::cout << "copyHL=" << std::chrono::duration_cast<std::chrono::milliseconds>(done_copy - started_copy).count() << std::endl;	 
+  
+  // reset the queue
   queue.clear();
+  std::cout << "number points=" << num_traced << std::endl;
 
   return num_traced;
 }
@@ -1025,7 +1037,7 @@ static void merge_zplus1(ProjMatrixElemsForOneBin& lor)
 }
 #endif
 
-//////////////////////
+// here, the implementation of the queue class starts
 ProjMatrixByBinQueue::ProjMatrixByBinQueue()
 {
   clear();

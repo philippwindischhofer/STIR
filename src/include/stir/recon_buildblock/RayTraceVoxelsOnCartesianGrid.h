@@ -73,7 +73,7 @@ template <typename elemT> class CartesianCoordinate3D;
   as this determines which plane the LOR intersects at this point.
 
 */
-void 
+int 
 RayTraceVoxelsOnCartesianGrid(ProjMatrixElemsForOneBin& lor, 
                               const CartesianCoordinate3D<float>& start_point, 
                               const CartesianCoordinate3D<float>& end_point, 

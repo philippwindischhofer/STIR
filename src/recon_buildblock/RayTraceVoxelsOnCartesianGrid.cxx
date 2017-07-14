@@ -58,7 +58,7 @@ is_half_integer(const float a)
     fabs(floor(a)+.5F - a)<.0001F;
 }
 
-void 
+int
 RayTraceVoxelsOnCartesianGrid
         (ProjMatrixElemsForOneBin& lor, 
          const CartesianCoordinate3D<float>& start_point, 
@@ -66,6 +66,8 @@ RayTraceVoxelsOnCartesianGrid
          const CartesianCoordinate3D<float>& voxel_size,
          const float normalisation_constant)
 {
+  int number_points = 0;
+  
   //std::cout << "RaytraceVoxelsOnCartesianGrid\n";
 
   //std::cout << start_point.x() << " / " << start_point.y() << " / " << start_point.z() << std::endl;
@@ -86,7 +88,7 @@ RayTraceVoxelsOnCartesianGrid
       // TODO
       // not sure how to handle this case as we're normally ray tracing from voxel edges
       warning("ray tracing with equal start and end point. Returning zero");
-      return;
+      return number_points;
     }
 
   // Find number of contributing elements. This will be used to
@@ -148,19 +150,19 @@ RayTraceVoxelsOnCartesianGrid
     if (norm(inc)>.1)
       {
 	lor.reserve(lor.size() + 2*lor_size);
-	RayTraceVoxelsOnCartesianGrid(lor, 
+	number_points += RayTraceVoxelsOnCartesianGrid(lor, 
 				      start_point - inc,
 				      stop_point - inc, 
 				      voxel_size,
 				      normalisation_constant/2);
 	
-	RayTraceVoxelsOnCartesianGrid(lor, 
+	number_points += RayTraceVoxelsOnCartesianGrid(lor, 
 				      start_point + inc,
 				      stop_point + inc, 
 				      voxel_size,
 				      normalisation_constant/2);
 	lor.sort();
-	return;
+	return number_points;
       }
   }
 
@@ -269,26 +271,33 @@ const float axend = zero_diff_in_x ? d12*1000000.F : (xmax - start_point.x()) * 
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,ax - a));
           a = ax;ax += inc_x;
           current_voxel.x()+=sign_x;
+	  number_points++;
         }      	  
         else{ 	// LOR leaves voxel through xy-plane         
 	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << az - a << std::endl;   	      
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a));	    	    
           a = az ;  az +=  inc_z;
           current_voxel.z()+=sign_z;
+	  number_points++;
         } 
       else  if ( ay < az) {	// LOR leaves voxel through xz-plane 	
 	//std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << ay - a << std::endl;
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,ay - a));
           a = ay;   ay +=  inc_y;
           current_voxel.y()+=sign_y;
+	  number_points++;
         }  
         else {// LOR leaves voxel through xy-plane 
 	  //std::cout << current_voxel.x() << " / " << current_voxel.y() << " / " << current_voxel.z() << " -- " << az - a << std::endl;			                      
           lor.push_back(ProjMatrixElemsForOneBin::value_type(current_voxel,az - a ));
           a = az; az +=  inc_z;
           current_voxel.z()+=sign_z; 
+	  number_points++;
         }
     }	// end of while (a<amax)           
   }
+  
+  return number_points;
+
 }
 END_NAMESPACE_STIR

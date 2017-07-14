@@ -103,6 +103,7 @@ get_proj_matrix_elems_for_one_bin(
     }
   }  
   // stop_timers(); TODO, can't do this in a const member
+
 }
 
 END_NAMESPACE_STIR

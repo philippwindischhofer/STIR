@@ -118,7 +118,7 @@ public:
   The implementation is inline as it just gets it in
   terms of the cached_proj_matrix_elems_for_one_bin or 
   calculate_proj_matrix_elems_for_one_bin.*/
-  inline void 
+  inline void
     get_proj_matrix_elems_for_one_bin(
        ProjMatrixElemsForOneBin&,
        const Bin&) STIR_MUTABLE_CONST;

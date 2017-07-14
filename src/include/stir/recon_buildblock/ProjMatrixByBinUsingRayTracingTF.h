@@ -222,9 +222,6 @@ private:
   void schedule_matrix_elems_for_caching(Bin bin) const;
   void schedule_basic_matrix_elems_for_caching(Bin bin, std::unique_ptr<SymmetryOperation> symm) const;
   void schedule_basic_matrix_elems_for_calculation(Bin bin, std::unique_ptr<SymmetryOperation> symm) const; // submits a *simple* bin to the calculation queue
-  
-  // private functions to prepare a LOR for execution, and to actually execute this LOR.
-  // returns the number of points that were scheduled for this LOR
   int scheduleLOR(float s, float t, float cphi, float sphi, float costheta, float tantheta, float offset_z, float fovrad, bool restrict_to_cylindrical_FOV, int num_LORs) const;
 
   //! variable to keep track if setup is called already
@@ -262,7 +259,6 @@ private:
   virtual void initialise_keymap();
   virtual bool post_processing();
 };
-
 
 END_NAMESPACE_STIR
 

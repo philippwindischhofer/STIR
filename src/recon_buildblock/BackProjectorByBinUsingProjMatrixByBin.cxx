@@ -160,28 +160,47 @@ actual_back_project(DiscretisedDensity<3,float>& image,
 	  const int segment_num = viewgram.get_segment_num();
     
 	  for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
-	    for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
-	      { 
-		// KT 21/02/2002 added check on 0
-		if (viewgram[ax_pos][tang_pos] == 0)
-		  continue;
-		Bin bin(segment_num, view_num, ax_pos, tang_pos, viewgram[ax_pos][tang_pos]);
+	    {
+	      for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
+		{ 
+		  // KT 21/02/2002 added check on 0
+		  if (viewgram[ax_pos][tang_pos] == 0)
+		    continue;
+		  Bin bin(segment_num, view_num, ax_pos, tang_pos, viewgram[ax_pos][tang_pos]);
 
-		if(TF_enabled)
-		  {
-		    proj_matrix_rows.clear();
+		  if(proj_matrix_ptr_tf.get())
+		    {
+		      proj_matrix_rows.clear();
 
-		    proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
-		    proj_matrix_ptr_tf -> execute(proj_matrix_rows);
+		      proj_matrix_ptr_tf -> schedule_matrix_elems_for_one_bin(bin);
+		    }
+		  else
+		    {
+		      proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
+		      proj_matrix_row.back_project(image, bin);
+		    }
+		}
+	    }
 
-		    proj_matrix_row = proj_matrix_rows.front();
-		  }
-		else
-		  {
-		    proj_matrix_ptr->get_proj_matrix_elems_for_one_bin(proj_matrix_row, bin);
-		  }
-		proj_matrix_row.back_project(image, bin);
-	      }
+	  if(proj_matrix_ptr_tf.get())
+	    {
+	      proj_matrix_ptr_tf -> execute(proj_matrix_rows);
+
+	      int cnt = 0;
+	      for ( int tang_pos = min_tangential_pos_num ;tang_pos  <= max_tangential_pos_num ;++tang_pos)  
+	      {
+		  for ( int ax_pos = min_axial_pos_num; ax_pos <= max_axial_pos_num ;++ax_pos)
+		    { 
+		      // KT 21/02/2002 added check on 0
+		      if (viewgram[ax_pos][tang_pos] == 0)
+			continue;
+		      Bin bin(segment_num, view_num, ax_pos, tang_pos, viewgram[ax_pos][tang_pos]);
+
+		      proj_matrix_rows[cnt].back_project(image, bin);
+		      cnt++;
+		    }
+		}
+	    }
 	  ++r_viewgrams_iter;   
 	}
     }  

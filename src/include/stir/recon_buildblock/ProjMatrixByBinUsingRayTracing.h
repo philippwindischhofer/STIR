@@ -205,7 +205,6 @@ private:
   virtual void 
     calculate_proj_matrix_elems_for_one_bin(
                                             ProjMatrixElemsForOneBin&) const;
-
    virtual void set_defaults();
    virtual void initialise_keymap();
    virtual bool post_processing();

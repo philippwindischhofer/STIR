@@ -43,6 +43,8 @@
 
 #include <time.h>
 
+#undef ENABLE_POINTGEN
+
 START_NAMESPACE_STIR
 
 class ProjMatrixElemsForOneBin;
@@ -65,13 +67,14 @@ class TFRayTracer
   tensorflow::TTypes<float, 1>::Tensor norm_const_in_tensor;
   
   int chunksize;
+  int chunksize_pointgen;
   int cur_pos;
 
   std::vector<ProjMatrixElemsForOneBinValue> temp_storage;
   void executeInternal();
 
   public:
-TFRayTracer(int chunksize);
+  TFRayTracer(int chunksize, int chunksize_pointgen);
   ~TFRayTracer();
   TFRayTracer(const TFRayTracer&) = delete;
   TFRayTracer& operator=(const TFRayTracer&) = delete;
@@ -81,18 +84,17 @@ TFRayTracer(int chunksize);
   void setVoxelSize(CartesianCoordinate3D<float>& voxel_size);
 
   // puts a new point into place
+  void schedulePoint(float px, float py, float pz, float rx, float ry, float rz, float norm_const);
+
   void schedulePoint(CartesianCoordinate3D<float>& point, CartesianCoordinate3D<float>& ray_vec, float norm_const);
 
   // acts on all elements at once with the ray tracer and put the result into "retval". Returns the total number of points that have been operated on
   int execute(std::vector<ProjMatrixElemsForOneBinValue>& retval);
 
-  // Method that actually performs the ray tracing
-  void 
-  RayTraceVoxelsOnCartesianGridTF(ProjMatrixElemsForOneBin& lor, 
-				  const CartesianCoordinate3D<float>& start_point, 
-				  const CartesianCoordinate3D<float>& end_point, 
-				  const CartesianCoordinate3D<float>& voxel_size,
-				  const float normalisation_constant = 1.F);
+#ifdef ENABLE_POINTGEN
+  // second functionality that uses TF to generate points along a LOR and then automatically schedules them for ray tracing
+  int scheduleLOR(std::vector<CartesianCoordinate3D<float>>& start_point, std::vector<CartesianCoordinate3D<float>>& stop_point, std::vector<CartesianCoordinate3D<float>>& ray_vec, std::vector<float>& norm_const);
+#endif
 };
 
 END_NAMESPACE_STIR
