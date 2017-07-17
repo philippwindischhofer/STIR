@@ -44,6 +44,10 @@
 #include <time.h>
 
 #undef ENABLE_POINTGEN
+#define TF_GRAPH "/TFRayMarching.pb"
+#define TF_GRAPH_POINTGEN "/TFRayMarchingWithLORGen.pb"
+#define TF_GRAPH_PATH TF_DIR_CMAKE TF_GRAPH
+#define TF_GRAPH_POINTGEN_PATH TF_DIR_CMAKE TF_GRAPH_POINTGEN
 
 START_NAMESPACE_STIR
 

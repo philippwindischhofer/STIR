@@ -33,12 +33,12 @@ TFRayTracer::TFRayTracer(int chunksize, int chunksize_pointgen) : session(NewSes
   Scope root = Scope::NewRootScope();
 
   GraphDef def;
-
+  
   // load the correct TF-Graph back from the Protobuf file
 #ifdef ENABLE_POINTGEN
-  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRayMarchingWithLORGen.pb", &def);
+  ReadBinaryProto(Env::Default(), TF_GRAPH_PATH_POINTGEN, &def);
 #else
-  ReadBinaryProto(Env::Default(), "/home/pwindisc/tf-raytracing/iterative-python/TFRayMarching.pb", &def);
+  ReadBinaryProto(Env::Default(), TF_GRAPH_PATH , &def);
 #endif
 
   TF_CHECK_OK(session -> Create(def));

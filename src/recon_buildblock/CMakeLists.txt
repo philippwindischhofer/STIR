@@ -80,14 +80,7 @@ set(${dir_LIB_SOURCES}
         PoissonLogLikelihoodWithLinearModelForMeanAndGatedProjDataWithMotion
 )
 
-##########################################################################################
-
-#set_property(SOURCE ProjMatrixByBinUsingRayTracingTF.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
-#set_property(SOURCE TFRayTracer.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
-
-#set_property(SOURCE recon_buildblock_registries.cxx APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 ")
-
-##########################################################################################
+add_definitions(-DTF_DIR_CMAKE="${CMAKE_SOURCE_DIR}/src/tensorflow")
 
 if (HAVE_ECAT)
  list(APPEND ${dir_LIB_SOURCES}
