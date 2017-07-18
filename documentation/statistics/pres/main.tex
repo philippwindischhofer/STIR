@@ -173,6 +173,40 @@
       \end{itemize}
     \item alternative approach: think of (intersection) points \textsl{without} the notion of an LOR
   \end{itemize}
+  \begin{figure}
+    \centering
+    \only<1>{\includegraphics[width = 0.9\textwidth]{../RMPointsLOR.pdf}}
+    \only<2>{\includegraphics[width = 0.9\textwidth]{../RMPointsTOR.pdf}}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Voxel-by-voxel LOI calculation}
+  \begin{itemize}
+    \item still not much easier than the full problem!
+    \item a cube is very discontinuous, hard to do it analytically without branches
+    \item what if content with an \textsl{approximate} solution?
+  \end{itemize}
+
+  \begin{figure}
+    \centering
+    \only<1>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep0.pdf}}
+    \only<2>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep1.pdf}}
+    \only<3>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep2.pdf}}
+    \only<4>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep3.pdf}}
+    \only<5>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep4.pdf}}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ray marching: an iterative algorithm}
+  \begin{itemize}
+    \item Use \textsl{signed distance function} of a cube to cut down the number of iterations that are needed
+      \begin{itemize}
+        \item a heuristic that produces an \textsl{underestimation} of the distance to the voxel boundary
+      \end{itemize}
+      \item need to assess the residual error that remains
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -183,7 +217,7 @@
   \end{itemize}
   \begin{figure}
     \centering
-    \subfloat[][]{\includegraphics[width = 0.6\textwidth]{../iterations.pdf}\label{6its}}
+    \subfloat[][]{\includegraphics[width = 0.7\textwidth]{../iterations.pdf}\label{6its}}
   \end{figure}
   \begin{itemize}
     \item with 6 iterations, are already at $\sim$ 5\% level!
@@ -205,7 +239,19 @@
 
 \begin{frame}
   \frametitle{Bringing together STIR and Tensorflow}
-  graph generation in python and graph utilization in c++
+  \framesubtitle{The infrastructure}
+  \begin{itemize}
+    \item Build the Tensorflow graph in a Python script
+      \begin{itemize}
+        \item much easier and faster to prototype
+        \item Python API much better documented and more stable
+      \end{itemize}
+    \item \underline{Save} the complete graph into a \texttt{ProtoBuf} file
+    \item \underline{Load} the file using the C++ API and make use of it in STIR
+      \begin{itemize}
+        \item link STIR against the Tensorflow (shared) library
+      \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \section{Results}
@@ -213,8 +259,8 @@
   \frametitle{Speedup without caching}
   \begin{figure}
     \centering
-      \subfloat[][]{\includegraphics[width = 0.5\textwidth]{../speedup_6_iterations.pdf}\label{6its}}
-      \subfloat[][]{\includegraphics[width = 0.5\textwidth]{../speedup_2_iterations.pdf}\label{2its}}
+      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_6_iterations.pdf}\label{6its}}
+      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_2_iterations.pdf}\label{2its}}
       \caption{\textbf{left}: 6 iterations, \textbf{right}: 2 iterations}
   \end{figure}
   
@@ -254,8 +300,24 @@
 \begin{frame}
   \frametitle{How to proceed?}
   \begin{itemize}
+    \item demonstrated a proof-of-concept of integrating Tensorflow into STIR
     \item whole toolchain is in place
+      \begin{itemize}
+        \item separation of graph generation (Python) and usage (C++) works very well
+      \end{itemize}
+    \item Speedup of $\sim$ 2 observed
   \end{itemize}
+
+  Not too bad, but still some limitations:
+  \begin{itemize}
+    \item how to improve utilization of GPU (conversion between Tensors and STIR objects)?
+    \item is there a better way to estimate the matrix elements?
+    \item so far, use only a single thread (no \texttt{openMP} support)
+      \begin{itemize}
+        \item Tensorflow sessions tend to allocate all of the available GPU memory to avoid fragmentation...
+      \end{itemize}
+  \end{itemize}
+
 \end{frame}
 
 \begin{frame}
