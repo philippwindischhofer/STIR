@@ -36,10 +36,15 @@
   \begin{itemize}
     \item STIR
     \item iterative reconstruction algorithms
-      \begin{itemize}
-        \item OSMAPOSL
-      \end{itemize}
+    \item find the optimum of a \textsl{cost function}\\
+      \begin{align*} P(\text{global LOR response} | \text{image}) = \prod_{\text{all LORs}} P(\text{LOR response} | \text{image})\end{align*}\\
+      \begin{align*} P(\text{LOR response} | \text{image}) = \int_{\text{LOR}} \text{image density}\end{align*}
+    \item in the following: how to compute / \underline{approximate} this integral?
   \end{itemize}
+\end{frame}
+
+\begin{frame}
+ empty
 \end{frame}
 
 \section{How to do ray tracing on a CPU?}
@@ -117,6 +122,18 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Images}
+  \begin{figure}
+    \centering
+    \subfloat[][]{\includegraphics[height = 0.5\textwidth]{../2_iterations_20LORs.png}}
+    \subfloat[][]{\includegraphics[height = 0.5\textwidth]{../Siddon_CPU.png}\label{2its}}
+    \caption{\textbf{left}: 2 iterations, 20LORs per matrix element, \textbf{right}: original STIR}
+  \end{figure}
+  \begin{itemize}
+    \item some artefacts: too few points
+  \end{itemize}
+\end{frame}
 
 \begin{frame}
   \frametitle{How to proceed?}
