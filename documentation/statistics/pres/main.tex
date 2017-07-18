@@ -25,12 +25,7 @@
  
 \frame{\titlepage}
 
-\begin{frame}
-\frametitle{Table of Contents}
-\tableofcontents
-\end{frame}
-
-\section{Where to start}
+\section{The big picture}
 \begin{frame}
   \frametitle{The big picture}
   \begin{itemize}
@@ -39,27 +34,147 @@
     \item find the optimum of a \textsl{cost function}\\
       \begin{align*} P(\text{global LOR response} | \text{image}) = \prod_{\text{all LORs}} P(\text{LOR response} | \text{image})\end{align*}\\
       \begin{align*} P(\text{LOR response} | \text{image}) = \int_{\text{LOR}} \text{image density}\end{align*}
-    \item in the following: how to compute / \underline{approximate} this integral?
+      \item Image (estimate) $\leadsto$ LOR response: \textsl{forward projection}
   \end{itemize}
 \end{frame}
 
 \begin{frame}
- empty
+  \frametitle{Ray tracing}
+  \begin{itemize}
+    \item in the following: how to compute / \underline{approximate} this integral?
+    \item represent \textsl{image} as a discretized array of voxels
+    \begin{align*}\int_{\text{LOR}} \text{image density} \leadsto \sum_{\text{traversed voxels}} \text{LOI} \cdot \text{voxel brightness}\end{align*}
+    \item $\text{LOI} = $ \underline{length of intersection} of the LOR through a specific voxel
+  \end{itemize}
+  (Standard) STIR spends $>$ 90\% of the reconstruction time for \textsl{forward projection}
+  \begin{itemize}
+    \item is there a way to make it faster?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Table of Contents}
+\tableofcontents
+\end{frame}
+
+\section{Tensorflow - what is it?}
+\begin{frame}
+\frametitle{Tensorflow}
+\begin{itemize}
+  \item \textsl{Google}: ``An open-source software library for machine intelligence''
+    \begin{itemize}
+      \item heavily used in the machine-learning community
+    \end{itemize}
+  \item Much more than that:
+    \begin{itemize}
+      \item a software package for numerical calculations using data-flow \textsl{graphs}
+    \end{itemize}
+
+    \begin{figure}
+      \centering
+      \includegraphics[width = 0.9\textwidth]{../ExampleGraph.png}
+    \end{figure}
+
+    \begin{itemize}
+      \item Design the graph \textsl{now}, save it to a file, run it \textsl{later}...
+      \item Can run it (almost) everywhere: CPU, GPU, a cluster, ...
+    \end{itemize}
+\end{itemize}
 \end{frame}
 
 \section{How to do ray tracing on a CPU?}
 \begin{frame}
   \frametitle{How to do ray tracing on a CPU?}
-  \framesubtitle{Siddon's algorithm}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{figure}
+    \centering
+    \includegraphics[width = 0.7\textwidth]{../Siddon.pdf}
+  \end{figure}
+  \begin{itemize}
+    \item a (very) sequential algorithm
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to do ray tracing on a CPU?}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{figure}
+    \centering
+    \includegraphics[width = 0.7\textwidth]{../Horizontal.pdf}
+  \end{figure}
+  \begin{itemize}
+    \item get intersections of LOI with all horizontal planes
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to do ray tracing on a CPU?}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{figure}
+    \centering
+    \includegraphics[width = 0.7\textwidth]{../Vertical.pdf}
+  \end{figure}
+  \begin{itemize}
+    \item get intersections of LOI with all vertical planes
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to do ray tracing on a CPU?}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{figure}
+    \centering
+    \includegraphics[width = 0.7\textwidth]{../SiddonTraced.pdf}
+  \end{figure}
+  \begin{itemize}
+    \item combine them and get the individual LOIs
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to do ray tracing on a CPU?}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{itemize}
+    \item parametrize the LOR
+      \begin{align*} \mathbf{x} = (\mathbf{x_{end}} - \mathbf{x_{start}}) \cdot \alpha + \mathbf{x_{start}} \end{align*}
+      \begin{align*} \alpha \in [0,1] \end{align*}
+    \item get intersections with horizontal and vertical planes in terms of the line parameter $\alpha$
+    \item merge and sort them
+    \item \textsl{differences} between neighbouring $\alpha$ values in the merged list describe the LOIs!
+  \end{itemize}
 \end{frame}
 
 \section{How to do ray tracing on a GPU?}
 \begin{frame}
-  \frametitle{How to do ray tracing on a GPU?}
-  
+  \frametitle{Siddon and Tensorflow}
+  \begin{itemize}
+    \item Siddon: $\mathcal{O}(N)$ for a LOR of length $N$ (this means a voxel array of size $N^3$!!)
+    \item many branches, a loop over the LOR, ...
+    \item \underline{very} inefficient when running with Tensorflow (GPU $\neq$ CPU architecture)
+      \begin{itemize}
+        \item especially problematic when trying to trace multiple LORs ``in parallel''
+      \end{itemize}
+
+    \item for Tensorflow: need an algorithm that ...
+      \begin{itemize}
+        \item uses the same algorithmic steps on \textsl{all} voxels of the LOR
+        \item uses the same algorithmic steps on \textsl{all} LORs
+      \end{itemize}
+  \end{itemize}
 \end{frame}
 
-\section{Results}
+\begin{frame}
+  \frametitle{Alternatives to Siddon}
+  \begin{itemize}
+    \item naive approach: for every LOR, compute the LOI through \textsl{every} voxel, then add them all up
+      \begin{itemize}
+        \item works fine with Tensorflow, but scales as $\mathcal{O}(N^3)$
+        \item CPU \& Siddon beat it again for real-world array sizes
+      \end{itemize}
+    \item alternative approach: think of (intersection) points \textsl{without} the notion of an LOR
+  \end{itemize}
+\end{frame}
+
 \begin{frame}
   \frametitle{Ray marching: an iterative algorithm}
   \framesubtitle{Accuracy}
@@ -93,6 +208,7 @@
   graph generation in python and graph utilization in c++
 \end{frame}
 
+\section{Results}
 \begin{frame}
   \frametitle{Speedup without caching}
   \begin{figure}
