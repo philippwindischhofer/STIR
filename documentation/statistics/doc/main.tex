@@ -1,0 +1,1015 @@
+\documentclass[a4paper, 11pt]{article}
+
+\usepackage[ngerman, english]{babel}
+\usepackage[latin9]{inputenc}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage[verbose]{hyperref}
+\usepackage[verbose]{placeins}
+\usepackage{amsmath,mathtools}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage[super]{nth}
+\usepackage{url}
+\usepackage{subfig}
+\usepackage{wasysym}
+\usepackage{slashed}
+\usepackage{fancyhdr}
+\usepackage{lipsum}
+\usepackage[top=1.0in, bottom=0.9in, left=0.8in, right=0.8in]{geometry}
+\usepackage{datetime}
+\usepackage{verbatim}
+\usepackage{siunitx}
+\usepackage{feynmp}
+\usepackage{fancybox}
+\usepackage{empheq}
+\usepackage{braket}
+\usepackage{multicol}
+
+% import macro definitions for feynman graphs
+\usepackage{feynmacros}
+\usepackage{mymacros}
+
+\sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
+
+% literature
+\usepackage[style=phys,maxbibnames=6,articletitle=true,biblabel=brackets,%
+  chaptertitle=true,pageranges=true,eprint=true, natbib=true, block=space, backend=bibtex, sorting=none]{biblatex}
+
+% interpret all .1 / .2 files (from feynmp) as eps (which they really are...)
+% to update the graphics-file, run >> mpost feyn <<
+\DeclareGraphicsRule{*}{mps}{*}{}
+
+\bibliography{db}
+\defbibheading{literature}{\paragraph{Bibliography:}}
+
+\makeatletter
+\renewcommand\@maketitle{%
+  \begin{center}
+    \begin{minipage}{\textwidth}
+      \centering
+          {\fontfamily{qtm}\selectfont
+            \noindent\Large \textbf{\@title}\\[1em]
+            \noindent\large \@author\\[0.4em]
+            \noindent\small\@date
+          }
+    \end{minipage}
+  \end{center}
+}
+\makeatother
+
+\title{Quantum Effective Theories}
+\author{Philipp Windischhofer\thanks{philipp.windischhofer@cern.ch}}
+\date{May \nth{8}, 2017}
+%\pagestyle{fancy}
+
+% allows equations to be page-broken
+\allowdisplaybreaks
+
+\begin{document}
+\begin{fmffile}{feyn}
+
+  \maketitle
+
+  \begin{abstract}
+    \noindent An astonishing fact about our world is that many phenomena that occur on vastly different scales can be understood independently of each other and effective theoretical models describing them can be constructed that need to rely only on the length or energy scale at which these phenomena occur. We show how this idea can be used in the realm of Quantum Field Theory. By considering a simple toy model, we will explicitely construct a low-energy effective theory where we only keep light particles, integrating out the heavy ones in a consistent way. We will discuss how phenomena such as the Hierarchy Problem or vacuum (in)stability manifest themselves in this context. Moreover, we discuss the $gg\rightarrow h$ amplitude as an important phenomenological application of the methods presented.
+  \end{abstract}
+
+ % \begin{multicols}{2}
+  \section{Introduction}
+  Physics is a science that describes phenomena across a wide range of length or energy scales. What is astounding is that there are many theories that are successful in describing a certain class of phenomena need to take into account only effects that originate at the scale at which these phenomena occur. Influences coming from much greater or smaller scales are often suppressed and can be taken into account perturbatively\footnote{Note that this statement is not generally true. In Newtonian mechanics, the trajectory of a body moving in a gravitational field is independent of its mass $m$. Even in the limit $m\rightarrow 0$ of vanishing gravitational charge, the particle does not \textsl{decouple} from the interaction. Similar examples can also be found for effective Quantum Field Theories, one of which we will encounter in Section \ref{ggh-section}.}.
+
+  To illustrate this point, consider Newtonian mechanics. The framework is extremely powerful in describing objects moving at velocities much smaller than the speed of light. However, as experiments proceeded to test its predictions to higher and higher degrees of precision, deviations were discovered. Indeed, today we know that corrections are of $\mathcal{O}\left(v^2/c^2\right)$ and are governed by the more complex (but also more widely applicable) theory of special relativity. In this sense, Newtonian mechanics is said to be the \textsl{low-energy effective theory} of special relativity. There are countless other examples in many areas of physics where, historically, a theory has been proposed which, in hindsight, could be identified as the low-energy limit of a more fundamental model.
+
+  Effective theories have proved to be particularly successful in the realm of Quantum Field Theory. In this context, they are known as Quantum Effective Theories or Effective Field Theories (EFTs).
+
+  \subsection{The bottom-up perspective}
+  \label{sm-eft}
+  An important domain of applicability of EFTs lies in \textsl{parametrizing} the effects of yet unknown physics, which lies above the scale probed so far by the experiments. It is widely believed that the Standard Model (SM) is not valid up to arbitrarily high energies, but is an effective theory of a more complete model, and thus valid only in the low-energy region accessible to our experiments. In this spirit, the SM can be extended by including additional higher-dimensional operators that respect the same $SU(3)_C \times SU(2)_L \times U(1)_Y$ gauge symmetries:
+
+  \begin{equation}
+    \mathcal{L}_{\text{EFT}} = \mathcal{L}'_{\text{SM}} + \sum_i \frac{c_i^{(5)}}{\Lambda}\mathcal{O}_i^{(5)} + \sum_i \frac{c_i^{(6)}}{\Lambda^2}\mathcal{O}_i^{(6)} + \sum_i \frac{c_i^{(7)}}{\Lambda^3}\mathcal{O}_i^{(7)} + \ldots
+    \label{sm-eft}
+  \end{equation}
+
+  Here, $\mathcal{O}_i^{(D)}$ symbolize new operators of mass dimension $D$. They are generated by the yet undiscovered high-energy theory. On dimensional grounds, they are suppressed by $4-D$ powers of a new mass $\Lambda$, which sets the scale at which these new interactions come in. The \textsl{Wilson coefficients} $c_i^{(D)}$ that play the role of coupling constants are then dimensionless. Furthermore, these new effects could lead to a correction of the SM interactions, transforming the SM lagrangian $\mathcal{L}_{SM}$ into $\mathcal{L}'_{SM}$, which differs from $\mathcal{L}_{SM}$ by the values of the coupling constants.
+
+  With this information, we can already estimate the magnitude of the new contributions caused by each $\mathcal{O}_i$. It will occur in the action $S$ as $\int d^4x\, \mathcal{O}_i^{(D)}$ which, for a process at an energy scale $E$, will be of order $E^{D-4}$. Combined with the prefactors, we see that the contribution of each $\mathcal{O}_i^{(D)}$ is of the order of
+  \begin{equation*}
+    \mathcal{O}_i^{(D)} \sim \left(\frac{E}{\Lambda}\right)^{D-4}.
+  \end{equation*}
+
+  For operators with $D>4$ as in Equation \ref{sm-eft}, this will give a suppression for low energies.
+  
+  Still, these new operators introduce new interactions or deviations in the SM couplings, which can be searched for experimentally. This input can then be used to put constraints on the Wilson coefficients. In this way, one achieves a \textsl{parametrization} of effects beyond the SM, which is independent of any particular model that tries to \textsl{explain} these phenomena.
+
+  It turns out that operators with mass dimension five lead to nonconservation of the lepton number $L$. However, since experiments have already excluded violations of $L$ at the levels expected from dimension five operators, the leading contribution comes from new operators with mass dimension six. Different bases to organize all possible new operators are in use. See for example \cite{sm-eft, b-decay} for more information and a very recent application of these ideas.
+  
+  \subsection{The top-down perspective}
+  There is another way in which EFTs are used. In case the high-energy theory (or UV theory) is already known, an EFT can be systematically constructed in a certain limit of that theory. In this domain, both theories will then be valid descriptions of nature. Depending on the complexity of the EFT one is willing to justify, it can match the predictions of the full theory to arbirary degrees of precision. Still, the EFT will in general be a \textsl{simpler} theory, and can have a reduced particle content compared to the UV model.
+
+  Let us consider for example a theory containing a very heavy fermion $\psi$ and a light scalar particle $\phi$. Its Lagrangian can schematically be written as
+
+  \begin{equation}
+    \mathcal L_{\text{UV}} = \mathcal{L}_1(\psi) + \mathcal{L}_2(\phi) + \mathcal{L}_3(\psi,\phi).
+  \end{equation}
+    
+  \noindent For experiments carried out at low energies, the heavy particles cannot be produced on-shell and so only the light fields participate as asymptotic states. In this regime, an EFT which \textsl{only} contains the light field $\phi$ is expected to be a good approximation.
+
+  We can write its Lagrangian as
+  \begin{equation}
+    \mathcal L_{\text{EFT}} = \mathcal{L}'_2(\phi') + \mathcal{L}_{D>4}(\phi'),
+  \end{equation}
+  where $\mathcal{L}'_2$ has the same functional form as $\mathcal{L}_2$, but with all coupling constants replaced by \textsl{effective} couplings. These will in general \textsl{not} be equal to their counterparts in the UV-theory, since they also typically have to absorb interactions with \textsl{virtual} $\psi$ particles. The second term, $\mathcal{L}_{D>4}$, contains additional higher-dimensional operators that are generated by removing (i.e.~\textsl{integrating out}) the heavy particle $\psi$ as a dynamical degree of freedom of the theory.
+  
+  \section{A toy model}
+  \label{toymodel}
+    We will explicitely go through the steps necessary to construct an EFT for the situation just mentioned. As our UV-complete theory, we make use of the following model
+    \begin{equation}
+      \mathcal{L_\text{UV}} = \bar\psi_0 (i\slashed\partial - M_0)\psi_0 +  \frac{1}{2}(\partial_\mu \phi_0)(\partial^\mu \phi_0) - \frac{1}{2} m_0^2 \phi_0^2 - \lambda_0 \bar\psi_0 \psi_0 \phi_0 - \frac{\alpha_0}{3!}\phi_0^3 - \frac{\beta_0}{4!}\phi_0^4,
+      \label{UV-L}
+    \end{equation}
+    and consider the limit $M_0 \gg m_0$, i.e.~we take the fermion to be very \textsl{heavy}, while the scalar remains very \textsl{light}. In the above Lagrangian, all fields, masses and couplings are understood to be \textsl{bare} quantities.
+
+    We would like to consider the low-energy limit of this theory, where all scales relevant for scattering processes are much smaller than $M_0$. We expect that under these circumstances, an effective theory that contains only the light scalar is still a realistic description. Thus, we make the general ansatz
+
+    \begin{equation}
+      \mathcal{L}_{\text{eff}} = \frac{1}{2}(\partial_\mu \phi'_0)(\partial^\mu \phi'_0) - \frac{1}{2} {m_0^2}' {\phi_0^2}' - \frac{\alpha'_0}{3!}{\phi_0^3}' - \frac{\beta'_0}{4!}{\phi_0^4}' + \mathcal{L}_{D>4},
+      \label{EFT-L}
+    \end{equation}
+
+    where additional, higher-dimensional operators such as derivative interactions are contained in $\mathcal{L}_{D>4}$.
+    
+    \subsection{Matching the two theories}
+    Our next task is to compute the parameters $m'_0$, $\alpha'_0$ and $\beta'_0$ that define the EFT. We can do so by comparing the $n$-point correlation functions computed in the full and in the effective theory.
+    
+    \subsubsection{Matching the $2$-point function}
+    We start by imposing a very central relation between the fields in the full and effective theory
+    \begin{equation}
+      \phi'_0 = \sqrt{\chi_\phi^0} \phi_0,
+      \label{decoupling-field}
+    \end{equation}
+    where $\chi_\phi^0$ is the \textsl{bare decoupling coefficient} of the field $\phi$. This allows us to relate the Feynman propagators in the following way:
+    \begin{equation}
+      \braket{0|T\phi_0\phi_0|0} = \left(\chi_\phi^0\right)^{-1} \braket{0|T\phi'_0\phi'_0|0}
+      \label{prop-matching}
+    \end{equation}
+    Note that the left-hand side of this equation is to be computed in the full theory, governed by the Lagrangian in Equation \ref{UV-L}, while the right-hand side is based on Equation \ref{EFT-L}. Indeed, a-priori the fields $\phi_0$ and $\phi'_0$ are two dynamical fields that are completely independent. Still, the relation in Equation \ref{decoupling-field} forces the two to be directly proportional to each other. The field $\psi_0$ then no longer appears as a dynamical degree of freedom, but its effects are absorbed into a rescaling of $\phi_0$\footnote{This process of \textsl{integrating out} the heavy state as a dynamical field is particularly transparent in the path integral formulation of Quantum Field Theory. There, one defines the action of the EFT via a path integral over the heavy states only: $e^{iS_\text{eff}[\phi]}=\int D\psi e^{iS_\text{UV}[\phi,\psi]}$. See \cite{murayama} for an extensive review of functional methods in the framework of effective theories.}.
+
+    Along the same line of thought, we expect that also the mass in the EFT gets corrected:
+    \begin{equation}
+      m'_0 = \sqrt{\chi_m^0}m_0.
+    \end{equation}
+
+    If we denote the set of all bare one-particle irreducible (1PI) insertions into the scalar propagator by \mbox{$-i\Sigma_0 = -i \Sigma_p^0(p^2)p^2 - i\Sigma_m^0 {m}^2$}, Equation \ref{prop-matching} provides the two conditions
+    \begin{equation}
+      \chi_\phi^0 = \frac{1-\Sigma_p^0}{1-{\Sigma_p^0}'}, \qquad\qquad  \chi_m^0 = \frac{1+\Sigma_m^0}{1+{\Sigma_m^0}'} \frac{1-{\Sigma_p^0}'}{1-\Sigma_p^0},
+      \label{decoupling-field-mass}
+    \end{equation}
+    where $-i\Sigma'_0 = -i {\Sigma'}_p^0(p^2)p^2 - i{\Sigma'}_m^0 {m'}^2$ denotes the analogous quantity in the EFT.
+    Diagrammatically, up to one-loop order these are given by
+    \begin{equation*}
+      -i\Sigma'(p^2) = 
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v,o1}
+          \fmf{dashes,right,tension=0.7}{v,v}
+          \fmfeff{v}
+      \end{fmfgraph*}\end{gathered}
+      +
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v1}
+          \fmf{dashes,label=$p$}{v2,o1}
+          \fmf{dashes,right,tension=0.5}{v1,v2,v1}
+          \fmfeff{v1}
+          \fmfeff{v2}
+      \end{fmfgraph*}\end{gathered}
+    \end{equation*}
+    and
+    \begin{equation*}
+      -i\Sigma(p^2)=
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v,o1}
+          \fmf{dashes,right,tension=0.7}{v,v}
+          \fmfdot{v}
+      \end{fmfgraph*}\end{gathered}
+      +
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v1}
+          \fmf{dashes,label=$p$}{v2,o1}
+          \fmf{dashes,right,tension=0.5}{v1,v2,v1}
+          \fmfdot{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+      +
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v1}
+          \fmf{dashes,label=$p$}{v2,o1}
+          \fmf{fermion,left,tension=0.5}{v1,v2,v1}
+          \fmfdot{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+    \end{equation*}
+    In these diagrams, the dashed lines symbolize the propagators of the scalar field, while the fermion propagators are given by solid lines. Vertices in the full theory are drawn as filled dots, while vertices in the effective theory are marked by empty squares.
+    Note that the external propagators are already understood to be amputated in these diagrams.
+
+    To this order, we see that only the \textsl{difference} between $\Sigma$ and $\Sigma'$ is relevant for the decoupling coefficients $\chi_\phi^0$ and $\chi_m^0$. Thus, diagrams that exist in both theories are trivially accounted for and \textsl{do not} contribute to the field redefinition. Therefore, we only need to explicitely compute the fermion loop diagram.
+
+    Reading off the expression from the diagram, we get
+    \begin{equation}
+      I_2 \equiv
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1}
+          \fmf{dashes,label=$p$}{i1,v1}
+          \fmf{dashes,label=$p$}{v2,o1}
+          \fmf{fermion,left,tension=0.5,label=$p+k$}{v1,v2}
+          \fmf{fermion,left,tension=0.5,label=$k$}{v2,v1}
+          \fmfdot{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+        =
+        (-1)(-i\lambda_0)^2 \lint \frac{\Tr[i(\slashed{p} + \slashed{k} + M_0)i(\slashed{k} + M_0)]}{[(p+k)^2-M_0^2][k^2-M_0^2]}
+    \end{equation}
+    
+    We see that this integral connects two different scales: the external scalar field carries a momentum $p$, while the fermion in the loop has mass $M^2 \gg p^2$ (since we are restricting ourselves to the low-energy regime). We can thus expand this integral in the small parameter $p^2/M^2$ and keep only the leading terms. The \textsl{strategy of regions} is an efficient computational method to achieve this task. Although a rigorous justification of this method does not yet exist, no counterexamples questioning its validity have been found either \cite{smirnov}. It proceeds along the following steps:
+    \begin{itemize}
+    \item divide the integration domain into several \textsl{regions}, and for each region, expand the integrand in a parameter that can be considered small there;
+      \item integrate this expansion over the \textsl{entire} domain, and add up the contributions from the various regions.
+    \end{itemize}
+    For the above integral, only the \textsl{hard} region, where $\mathcal{O}(1) \sim k^2 \sim M^2 \gg p^2 \sim m^2 \sim \mathcal{O}(\delta^2)$ turns out to give a nonvanishing contribution. In this limit, we can expand the first term in the denominator. After evaluating the trace in the numerator we get
+    \begin{equation*}
+      -4 \lambda_0^2 \lint \frac{1}{(k^2-M_0^2)^2} [k^2 + M_0^2 + p\cdot k]\left[1 - \frac{2p\cdot k}{k^2-M_0^2} - \frac{p^2}{k^2-M_0^2} + \left(\frac{2p\cdot k}{k^2-M_0^2} \right)^2 + \mathcal{O}(\delta^3) \right].
+    \end{equation*}
+
+    Expanding the parenthesis, we see that the terms of $\mathcal{O}(\delta)$ are odd in $k$ and thus vanish. Therefore, we obtain
+    \begin{multline*}
+      -4 \lambda_0^2\lint \left[\frac{1}{k^2-M_0^2} + \frac{2M_0^2}{(k^2-M_0^2)^2} + \frac{2(p\cdot k)^2}{(k^2-M_0^2)^3} + 8M_0^2 \frac{(p\cdot k)^2}{(k^2-M_0^2)^4} -\right.\\\left. - \frac{p^2}{(k^2-M_0^2)^2} - \frac{2M_0^2p^2}{(k^2-M_0^2)^3} \right],
+    \end{multline*}
+    where all integrations can now be carried out easily. We will use dimensional regularization to regulate the divergent integrals, and send $\lambda_0\rightarrow\lambda_0 \mu^\eps$ to keep $\lambda_0$ dimensionless. For the contribution of the hard region, and thus for the loop integral we wanted to compute, we get
+    \begin{equation}
+      I_2 = -4i\frac{\lambda_0^2}{(4\pi)^2}\left[ \left(3M_0^2 - \frac{p^2}{2} \right)\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right) + M_0^2 + \frac{p^2}{3} \right].
+    \end{equation}
+
+    Plugging this result into Equation \ref{decoupling-field-mass}, we find
+    \begin{align}
+      \chi_\phi^0 &= 1 + 4 \frac{\lambda_0^2}{(4\pi)^2}\left[\frac{1}{2}\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right) - \frac{1}{3} \right],\\
+      \chi_m^0 &= 1 + 4 \frac{M_0^2}{m_0^2}\frac{\lambda_0^2}{(4\pi)^2}\left[1 + 3\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right) \right] - 4 \frac{\lambda_0^2}{(4\pi)^2}\left[\frac{1}{2}\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right) - \frac{1}{3} \right],
+    \end{align}
+    where we have introduced the notation $\frac{1}{\bar\eps} = \frac{1}{\eps} - \gamma + \log 4\pi$ with the Euler-Mascheroni constant $\gamma \approx 0.577$.
+      
+    \subsubsection{Matching the cubic and quartic vertices}
+    The matching of the vertex functions proceeds analogously. For the three-point function, we have
+    \begin{equation}
+      \braket{0|T\phi_0\phi_0\phi_0|0} = \left(\chi_\phi^0\right)^{-3/2}\braket{0|T\phi'_0\phi'_0\phi'_0|0}.
+      \label{matching-3point}
+    \end{equation}
+
+    Now we write the three-point function in more detail, explicitely denoting the external propagators and the amputated vertex that it contains. Schematically,
+    \begin{equation*}
+      \braket{0|T\phi_0\phi_0\phi_0|0} = \int \braket{0|T\phi_0\phi_0|0}^3\left[-i\alpha_0 (1+\Gamma_0) \right]
+    \end{equation*}
+
+    For the couplings, we will again introduce decoupling coefficients, that relate these quantities in the two theories. For the bare cubic coupling,
+    \begin{equation}
+      \alpha'_0 = \chi_\alpha^0 \alpha_0.
+    \end{equation}
+
+    \noindent An analogous expression holds for the effective theory, and so Equation \ref{matching-3point} leads to
+    \begin{equation}
+      \chi_\alpha^0 = \frac{1+\Gamma_0}{1+\Gamma'_0}\left(\chi_\phi^0\right)^{-3/2}.
+      \label{decoupling-coeff-alpha}
+    \end{equation}
+
+    \noindent Again, let us represent the relevant diagrams participating in the 1PI vertex corrections in terms of Feynman diagrams (the external propagators are again understood to be amputated):
+    \begin{equation*}
+      -i\alpha'\Gamma' =
+      \left(
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_2$,label.side=right}{o1,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{o2,v1}
+          \fmf{dashes,left,tension=0.3}{v1,v2,v1}
+          \fmf{dashes,label=$p_1$}{v2,i1}
+          \fmfeff{v1}
+          \fmfeff{v2}
+      \end{fmfgraph*}\end{gathered}
+      +  \text{perm.}
+      \right)
+      +
+      \left(
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_2$,label.side=right}{o1,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{o2,v2}
+          \fmf{dashes,tension=0.3}{v1,v3,v2,v1}
+          \fmf{dashes,label=$p_1$}{v3,i1}
+          \fmfeff{v2,v3}
+          \fmfeff{v1}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.}\right)
+    \end{equation*}
+
+    \begin{equation*}
+      -i\alpha\Gamma=
+      \left(
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_2$,label.side=right}{o1,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{o2,v1}
+          \fmf{dashes,left,tension=0.3}{v1,v2,v1}
+          \fmf{dashes,label=$p_1$}{v2,i1}
+          \fmfdot{v1}
+          \fmfdot{v2}
+      \end{fmfgraph*}\end{gathered}
+      +  \text{perm.}
+      \right)
+      +
+      \left(
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_2$,label.side=right}{o1,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{o2,v2}
+          \fmf{dashes,tension=0.3}{v1,v3,v2,v1}
+          \fmf{dashes,label=$p_1$}{v3,i1}
+          \fmfdot{v2,v3}
+          \fmfdot{v1}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.}\right)
+      +
+      \left(
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_2$,label.side=right}{o1,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{o2,v2}
+          \fmf{fermion,tension=0.3}{v1,v3,v2,v1}
+          \fmf{dashes,label=$p_1$}{v3,i1}
+          \fmfdot{v2,v3}
+          \fmfdot{v1}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.}\right)
+    \end{equation*}
+
+    \noindent Here, $p_1$ is an incoming momentum, while $p_2$ and $p_3$ are outgoing.
+
+    There is a subtle point which we have not discussed so far. In general $\Gamma_0$ and $\Gamma'_0$ will depend on the momenta $p_i$ flowing through them, while $\chi_\alpha^0$ in Equation \ref{decoupling-coeff-alpha} is supposed to be a constant! The apparent contradiction resolves itself once we realize that the cubic interaction in the EFT  we are trying to match to is \textsl{momentum-independent} (i.e.~its interaction Lagrangian does not contain any derivatives). This means that we can evaluate $\Gamma_0$ and $\Gamma'_0$ at vanishing external momenta when computing $\chi_\alpha^0$, which also simplifies the computation of the necessary diagrams. Of course, this causes the predictions of the EFT and the UV-theory to differ, but the discrepancy will be suppressed by the ratio $p^2/M^2$, which is by definition small in the limit we consider. If we wish to increase the accuracy of our EFT calculations, we will need to include (and match) additional interaction terms into $\mathcal{L}_{\text{eff}}$ which are sensitive to the momentum exchanged, such as $\phi(\partial_\mu\phi)(\partial^\mu\phi)$. We will consider an explicit (but somewhat simpler) example of this in Section \ref{fermion-eft}.
+
+    For the four-point function, we denote the exact amputated bare vertex function as $-i\beta_0 (1+\Omega_0)$. We can then proceed along the exact same steps, starting from
+
+    \begin{align*}
+      \braket{0|T\phi_0\phi_0\phi_0\phi_0|0} &= \left(\chi_\phi^0\right)^{-2}\braket{0|T\phi'_0\phi'_0\phi'_0\phi'_0|0},\\
+      \braket{0|T\phi_0\phi_0\phi_0\phi_0|0} &= \int \braket{0|T\phi_0\phi_0|0}^4\left[-i\beta_0 (1+\Omega_0) \right],
+    \end{align*}
+    and arrive at
+    \begin{align}
+      \beta'_0 = \chi_\beta^0 \beta_0 \qquad \chi_\beta^0 = \frac{1+\Omega_0(0)}{1+\Omega'_0(0)}\left(\chi_\phi^0\right)^{-2},
+    \end{align}
+    in perfect analogy with Equation \ref{decoupling-coeff-alpha}.
+    Here, we have also evaluated the amputated vertex factors at zero external momentum.
+
+    Graphically, the relevant contributions are    
+    \begin{equation*}
+      -i\beta'\Omega'=
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,label=$p_2$,label.side=right}{i2,v1}
+          \fmf{dashes,left,tension=0.3}{v1,v2,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{v2,o1}
+          \fmf{dashes,label=$p_4$,label.side=right}{v2,o2}
+          \fmfeff{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.} \right)
+      +
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,tension=1,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,tension=1,label=$p_2$,label.side=right}{i2,v1}
+          \fmf{dashes,tension=1,label=$p_4$}{v2,o2}
+          \fmf{dashes,tension=1,label=$p_3$}{v3,o1}
+          \fmf{dashes,tension=0.4}{v1,v2}
+          \fmf{dashes,tension=0.4}{v2,v3}
+          \fmf{dashes,tension=0.4}{v3,v1}
+          \fmfeff{v1,v3}
+          \fmfeff{v2}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.}\right)
+      +
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,label=$p_2$,label.side=right}{i2,v2}
+          \fmf{dashes,label=$p_3$,label.side=left}{v3,o1}
+          \fmf{dashes,label=$p_4$,label.side=right}{v4,o2}
+          \fmf{dashes,tension=0.5}{v1,v2,v4,v3,v1}
+          \fmfdot{v1,v3}
+          \fmfdot{v2,v4}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.} \right)
+    \end{equation*}
+
+    \begin{multline*}
+      -i\beta\Omega=
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,label=$p_2$,label.side=right}{i2,v1}
+          \fmf{dashes,left,tension=0.3}{v1,v2,v1}
+          \fmf{dashes,label=$p_3$,label.side=left}{v2,o1}
+          \fmf{dashes,label=$p_4$,label.side=right}{v2,o2}
+          \fmfdot{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.} \right)
+      +
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,tension=1,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,tension=1,label=$p_2$,label.side=right}{i2,v1}
+          \fmf{dashes,tension=1,label=$p_4$}{v2,o2}
+          \fmf{dashes,tension=1,label=$p_3$,label.side=left}{v3,o1}
+          \fmf{dashes,tension=0.4}{v1,v2}
+          \fmf{dashes,tension=0.4}{v2,v3}
+          \fmf{dashes,tension=0.4}{v3,v1}
+          \fmfdot{v1,v3}
+          \fmfdot{v2}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.}\right)
+      +
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,label=$p_2$,label.side=right}{i2,v2}
+          \fmf{dashes,label=$p_3$,label.side=left}{v3,o1}
+          \fmf{dashes,label=$p_4$,label.side=right}{v4,o2}
+          \fmf{dashes,tension=0.5}{v1,v2,v4,v3,v1}
+          \fmfdot{v1,v3}
+          \fmfdot{v2,v4}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.} \right)
+      +\\[1em]+
+      \left(\quad
+      \begin{gathered}\begin{fmfgraph*}(50,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{dashes,label=$p_1$,label.side=left}{i1,v1}
+          \fmf{dashes,label=$p_2$,label.side=right}{i2,v2}
+          \fmf{dashes,label=$p_3$,label.side=left}{v3,o1}
+          \fmf{dashes,label=$p_4$,label.side=right}{v4,o2}
+          \fmf{fermion,tension=0.5}{v1,v2,v4,v3,v1}
+          \fmfdot{v1,v3}
+          \fmfdot{v2,v4}
+      \end{fmfgraph*}\end{gathered}
+      + \text{perm.} \right)
+    \end{multline*}
+
+    For both the cubic and the quartic coupling, only the diagrams containing internal fermions survive and contribute to the decoupling coefficients. The fermion loop integrals can be computed by the strategy of regions. As before, only the \textsl{hard} momentum regions give a nonvanishing contribution. Therefore, we obtain
+    \begin{align}
+      \chi_\alpha^0 &= 1 - 6\frac{\lambda_0^2}{(4\pi)^2}\left[\frac{1}{2}\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right) - \frac{1}{3} \right] - \frac{\lambda_0^3}{(4\pi)^2}\frac{M_0}{\alpha_0}\left[\frac{24}{\bar\eps}+24\log\frac{\mu^2}{M_0^2} - 16 \right]\\
+      \chi_\beta^0 &= 1 - 8\frac{\lambda_0^2}{(4\pi)^2}\left[\frac{1}{2}\left(\frac{1}{\bar\eps} + \log\frac{\mu^2}{M_0^2} \right)-\frac{1}{3} \right] + \frac{\lambda_0^4}{(4\pi)^2}\frac{1}{\beta_0}\left[\frac{24}{\bar\eps} + 24\log\frac{\mu^2}{M_0^2} - 64 \right].
+    \end{align}
+
+    Let us note that the bare decoupling coefficients have been expressed in terms of \textsl{bare} quantities. However, to obtain finite results, we will have to renormalize the UV- and effective theory, before we are able to send the regulator $\eps\rightarrow 0$.
+    
+    \subsection{Renormalization and scheme dependence}
+    The renormalized and bare fields and couplings of the UV and effective theory are related by multiplicative constants which we will determine in the course of the renormalization procedure. We use the following definitions
+    \begin{align*}
+      \phi_0 &= \sqrt{Z_\phi}\phi, \,& \psi_0 &= \sqrt{Z_\psi}\psi, \,\\
+      M_0 &= \frac{Z_M}{Z_\psi} M, \,&  m_0 &= \frac{\sqrt{Z_m}}{\sqrt{Z_\phi}}m, \,\\
+      \lambda_0 &= \frac{Z_\lambda}{Z_\psi \sqrt{Z_\phi}}\mu^\eps \lambda, \,& \alpha_0 &= \frac{Z_\alpha}{\left(Z_\phi \right)^{3/2}}\mu^{\eps}\alpha, \,\\
+      \beta_0 &= \frac{Z_\beta}{Z_\phi^2}\mu^{2\eps}\beta,
+    \end{align*}
+    and
+    \begin{align*}
+      \phi'_0 &= \sqrt{Z'_\phi}\phi', \,& m'_0 &= \frac{\sqrt{Z'_m}}{\sqrt{Z'_\phi}}m', \,\\
+      \alpha'_0 &= \frac{Z'_\alpha}{\left({Z'}_\phi \right)^{3/2}}\mu^\eps\alpha', \,&  \beta'_0 &= \frac{Z'_\beta}{{Z'}_\phi^2}\mu^{2\eps}\beta'. \,\\
+    \end{align*}
+
+    \noindent If we also set $Z_i = 1 + \delta Z_i$, we can split up the bare Lagrangian as follows
+    \begin{equation}
+      \mathcal{L_\text{UV}} = \bar\psi (i\slashed\partial - M)\psi +  \frac{1}{2}(\partial_\mu\phi)(\partial^\mu\phi) - \frac{1}{2} m^2 \phi^2 - \lambda \mu^\eps \bar\psi \psi \phi - \frac{\alpha \mu^\eps}{3!}\phi^3 - \frac{\beta \mu^{2\eps}}{4!}\phi^4 + \mathcal{L_\text{CT}},
+    \end{equation}
+    where the \textsl{counterterms} are
+    \begin{multline}
+      \mathcal{L_\text{CT}} = \bar\psi (i \delta Z_\psi \slashed\partial - M\delta Z_{M})\psi +  \frac{1}{2}\delta Z_\phi(\partial_\mu\phi)(\partial^\mu\phi) - \frac{1}{2}\delta Z_m m^2 \phi^2 - \lambda\delta Z_\lambda \mu^\eps \bar\psi \psi \phi - \delta Z_\alpha \frac{\alpha \mu^\eps}{3!}\phi^3 - \delta Z_\beta \frac{\beta \mu^{2\eps}}{4!}\phi^4.
+    \end{multline}
+
+    The parameters $\delta Z_i$ are now determined by the requirement that the sum of all 1PI contributions to a certain $n$-point function, including the counterterm vertices, is finite \textsl{separately at every order in perturbation theory}. This requirement for the Green's functions to be finite determines uniquely the infinite part of the constants $Z_i$. However, additional finite pieces are arbitrary, and depend on the \textsl{renormalization scheme} one chooses.
+
+    While the \textsl{bare} decoupling coefficients are independent of any renormalization scheme, the finite, renormalized decoupling coefficients \textsl{will} have this dependence. Just as the bare decoupling coefficients relate the bare fields in the two theories, the renormalized decoupling coefficients translate between the renormalized fields:
+
+    \begin{align}
+      \phi' = \sqrt{\chi_\phi} \phi, \qquad m' = \sqrt{\chi_m} m, \qquad \alpha' = \chi_\alpha \alpha, \qquad \beta' = \chi_\beta \beta.
+    \end{align}
+
+    Making use of the definition of the renormalization constants $Z_i$, we find
+    
+    \begin{equation}
+      \chi_\phi = \chi_\phi^0\frac{Z_\phi}{Z'_\phi}, \qquad \chi_m = \chi_m^0 \frac{Z_m Z'_\phi}{Z'_m Z_\phi}, \qquad
+      \chi_\alpha = \chi_\alpha^0 \frac{{Z_\phi'}^{3/2}}{Z_\phi^{3/2}} \frac{Z_\alpha}{Z'_\alpha}, \qquad \chi_\beta = \chi_\beta^0 \frac{{Z_\phi'}^{2}}{Z_\phi^{2}} \frac{Z_\beta}{Z'_\beta}.
+      \label{decoupling-finite}
+    \end{equation}
+
+    Let us first carry out the renormalization in the $\overbar{\text{MS}}$-scheme, where only the $\frac{1}{\bar\eps}$ pieces are absorbed into the counterterms. In the full theory, we thus obtain
+
+    \begin{align}
+  \begin{split}
+    Z_\beta &= 1 + \frac{1}{(4\pi)^2}\left(\frac{3}{2}\beta - 24 \frac{\lambda^4}{\beta} \right)\frac{1}{\bar\eps},\\
+    Z_\alpha &= 1 + \frac{1}{(4\pi)^2}\left(\frac{3}{2}\beta + 24\frac{M}{\alpha}\lambda^3 \right) \frac{1}{\bar\eps},\\
+    Z_\lambda &= 1 + \frac{\lambda^2}{(4\pi)^2}\frac{1}{\bar\eps},\\
+    Z_\phi &= 1 - \frac{2\lambda^2}{(4\pi)^2}\frac{1}{\bar\eps},\\
+    Z_{m} &= 1 + \frac{1}{(4\pi)^2}\left(\frac{1}{2}\frac{\alpha^2}{m^2} - 12\lambda^2\frac{M^2}{m^2} + \frac{\beta}{2} \right)\frac{1}{\bar\eps},
+  \end{split}
+  \label{MSbar_counterterms}
+\end{align}
+    
+    and for the EFT
+
+    \begin{align}
+      \begin{split}
+        Z'_\beta &= Z'_\alpha = 1 + \frac{3}{2}\frac{\beta'}{(4\pi)^2} \frac{1}{\bar\eps},\\
+        Z'_\phi &= 1,\\
+        Z'_{m} &= 1 + \frac{1}{2(4\pi)^2}\left(\frac{\alpha'^2}{m'^2} + \beta' \right)\frac{1}{\bar\eps}.
+      \end{split}
+    \end{align}
+    
+    Plugging these into Equation \ref{decoupling-finite}, we find for the decoupling coefficients in the $\overbar{\text{MS}}$-scheme at one-loop accuracy:
+    \begin{align}
+      \begin{split}
+        \chi_\phi(\overbar{\text{MS}}) &= 1 + 4 \frac{\lambda^2}{(4\pi)^2}\left[\frac{1}{2}\log\frac{\mu^2}{M^2} - \frac{1}{3} \right],\\
+        \chi_m(\overbar{\text{MS}}) &= 1 + 4 \frac{M^2}{m^2}\frac{\lambda^2}{(4\pi)^2}\left[1 + 3 \log\frac{\mu^2}{M^2} \right] - 4 \frac{\lambda^2}{(4\pi)^2}\left[\frac{1}{2}\log\frac{\mu^2}{M^2} - \frac{1}{3} \right],\\
+        \chi_\alpha(\overbar{\text{MS}}) &= 1 - 6\frac{\lambda^2}{(4\pi)^2}\left[\frac{1}{2} \log\frac{\mu^2}{M^2} - \frac{1}{3} \right] - \frac{\lambda^3}{(4\pi)^2}\frac{M}{\alpha}\left[24\log\frac{\mu^2}{M^2} - 16 \right],\\
+        \chi_\beta(\overbar{\text{MS}}) &= 1 - 8\frac{\lambda^2}{(4\pi)^2}\left[\frac{1}{2} \log\frac{\mu^2}{M^2}-\frac{1}{3} \right] + \frac{\lambda^4}{(4\pi)^2}\frac{1}{\beta}\left[24\log\frac{\mu^2}{M^2} - 64 \right].
+      \end{split}
+      \label{MSbar_finite}
+    \end{align}
+    
+    (These are of course just the bare decoupling coefficients upon the ``minimal'' subtraction $1/\bar\eps\rightarrow 0$). In these formulae, the regularization scale $\mu$ is also to be interpreted as the \textsl{renormalization} scale: $\mu = \mu_R$.
+
+    A few comments are in order regarding these results. The most striking feature is that $\chi_m$ and $\chi_\alpha$ contain terms that go like $(M/m)^2$ or $M/\alpha$. This means that, when the mass $M$ of the heavy fermion is sent to infinity, the heavy scale \textsl{does not} become irrelevant and the EFT does not decouple, but rather suffers from diverging corrections to the scalar mass and cubic coupling.
+
+    This phenomenon of a large correction to the mass of a scalar particle is often dubbed the ``Hierarchy Problem'' and is also present in the SM. In fact, we could have anticipated this effect already from the considerations in Section \ref{sm-eft}. The scalar mass operator $\phi^2$ is of dimension two. By dimensional analysis, we have found that its contribution to the action is expected to scale as $(\Lambda/E)^2$. With the large scale $\Lambda$ now set by the mass of the heavy fermion, and the energy of a typical process in the EFT given by the mass of the light scalar, $E\sim m$, we indeed find the correct behavior of $M^2/m^2$ for the scalar mass\footnote{The reason why a light fermion \textsl{does not} pick up large corrections to its mass is rooted in symmetry. A massless Dirac langrangian is invariant under the chiral symmetry $\psi \rightarrow e^{i\alpha\gamma^5}\psi$, $\alpha\in\mathbb{R}$. Thus, propagator corrections are governed by Feynman rules that \textsl{also} respect this symmetry. However, a mass term is \textsl{not} invariant under this transformation. Therefore, a massless fermion will remain massless to all orders. Consequently, the mass correction $\delta m$ must be proportional to the light mass itself, and so a light fermion will receive only small mass corrections.}.
+
+    However, the renormalized quantities $m'$ and $\alpha'$ in the $\overbar{\text{MS}}$-scheme are not necessarily physical observables. To connect them to quantities that are actually accessible to experiments, we should renormalize the theory in the \textsl{on-shell scheme}. In this scheme, the renormalized quantities are fixed by the following set of renormalization conditions:
+    \begin{align}
+      \begin{split}
+      \Sigma(p^2)\rvert_{p^2=m^2} &= 0,\\
+      \frac{d}{dp^2}\Sigma(p^2)\rvert_{p^2=m^2} &= 0,\\
+      \Gamma(p_1^2 = 4m^2, p_2^2 = p_3^2 = m^2) &= 0,\\
+      \Omega(s = 4m^2, t = u = 0) &= 0.
+      \end{split}
+      \label{on-shell-fixed}
+    \end{align}
+
+    The first two equations demand that the full scalar propagator has a pole of unit residue at the physical mass $m$. The other two relations fix the cubic and quartic coupling at the thresholds of the 3-$\phi$ and 4-$\phi$ scattering processes.
+
+    If we repeat the renormalization in this scheme, the problematic decoupling coefficients turn out to be
+    \begin{alignat*}{2}
+      \chi_m(\text{OS}) &= 1\\
+      \chi_\alpha(\text{OS}) &= 1 + \frac{\lambda^3}{(4\pi)^2}\frac{m}{\alpha}\left(2\frac{m}{M} - \frac{7}{5}\frac{m^3}{M^3} + \ldots \right)
+    \end{alignat*}
+
+    Now, the large contributions from the heavy fermion have disappeared completely and the EFT does decouple in the limit $M\rightarrow\infty$, as far as physical observables are concerned:
+
+    \begin{equation*}
+      \alpha' \xrightarrow{M\rightarrow\infty} \alpha \qquad  \beta' \xrightarrow{M\rightarrow\infty} \beta
+    \end{equation*}
+
+    This confirms our expectations that physics at an arbitrarily high mass scale is not needed to explain the outcomes of scattering processes at lower scales\footnote{There are a couple of counterexamples, where the Wilson coefficient (at least to leading order) is \textsl{independent} of the heavy scale, i.e.~the theory does not decouple. We will find this behavour again in Section \ref{ggh-section}.}.
+    
+    \subsection{Running of the Wilson coefficients}
+    The bare quantities do not depend on the renormalization scale $\mu_R$. This allows us to derive evolution equations (the so-called renormalization group equations, RGEs) for the renormalized couplings in terms of $\mu_R$. For example, for $\alpha'$:
+    \begin{equation}
+      0 = \mu_R \frac{d}{d\mu_R}\alpha'_0 = \mu_R \frac{d}{d\mu_R}\left(\frac{Z'_\alpha}{\left({Z'}_\phi \right)^{3/2}}\mu^\eps\alpha'\right).
+      \label{RGE-start}
+    \end{equation}
+
+    \noindent In this way, we obtain for the $\overbar{\text{MS}}$-renormalized quantities
+    \begin{align*}
+      \begin{split}
+        \mu_R \frac{d}{d\mu_R}\alpha' &= \frac{3\alpha'\beta'}{(4\pi)^2},\\
+        \mu_R \frac{d}{d\mu_R}\beta' &= \frac{3\beta'^2}{(4\pi)^2},\\
+        \mu_R \frac{d}{d\mu_R}m' &= \frac{m'}{2(4\pi)^2}\left(\frac{\alpha'^2}{m'^2}+\beta' \right).
+      \end{split}
+    \end{align*}
+
+    Similar equations can also be derived for the renormalized couplings (and the mass) defined in the on-shell scheme. However, when making use of the renormalization conditions in Equation \ref{on-shell-fixed}, we find that the couplings \textsl{do not} run in this scheme. This comes from the fact that we performed the renormalization at a \textsl{fixed} scale $m^2$. Therefore, the parameters of the theory exhibit no evolution as the renormalization scale is varied, as there \textsl{is} nothing to be varied. If we want to study the running of the - more physically relevant - parameters in the on-shell scheme as well, we need to slightly change the renormalization conditions and instead impose
+    \begin{align}
+      \begin{split}
+        \Sigma(p^2)\rvert_{p^2=-\mu_R^2} &= 0,\\
+        \frac{d}{dp^2}\Sigma(p^2)\rvert_{p^2=-\mu_R^2} &= 0,\\
+        \Gamma(p_1^2 = -2\mu_R^2, p_2^2 = p_3^2 = m^2) &= 0,\\
+        \Omega(s = t = u = -\frac{4}{3}\mu_R^2, p_i^2 = m^2) &= 0.
+        \end{split}
+      \label{on-shell-variable}
+    \end{align}
+
+    It is important to note that this modified prescription will lead to counterterms that differ from the ones obtained from the renormalization conditions in Equation \ref{on-shell-fixed} only by inconsequential terms that are suppressed by powers of $m/M$. Therefore, both prescriptions have the desirable property that the renormalized decoupling coefficients remain finite as $M\rightarrow\infty$.
+
+    The use of a spacelike renormalization point in Equation \ref{on-shell-variable} may seem counterintuitive at first. However, by doing so, we can exploit the much simpler behavior of the contributing loop integrals in the spacelike region. In particular, no \textsl{physical} thresholds appear and the integrals evaluate to \textsl{real} numbers. This in turn preserves the reality of the coupling constants, once they are evolved by the RGEs.
+
+    After repeating the renormalization with these new conditions, the evolution equations for the renormalized parameters can again be obtained as before. These equations are now already more complicated:
+    \begin{alignat*}{2}
+      \mu_R \frac{d}{d\mu_R}\alpha' &= &&\frac{2\beta'\alpha'}{(4\pi)^2}\int_0^1 dx \frac{\mu_R^2 x\bar{x}}{m'^2 + 2\mu_R^2 x\bar{x}} - \frac{4\alpha'^3}{(4\pi)^2}\mu_R^2\int_0^1 dx \int_0^{1-x} dy \left(\frac{1}{\Delta^2_\alpha}\right)^2 (x\bar{x} - x y) +\\
+      & &&+ \frac{3}{2}\frac{\alpha'^3}{(4\pi)^2}\int_0^1 dx \frac{\mu_R^2 (x\bar{x})^2}{(m'^2 + \mu_R^2 x\bar{x})^2}\\
+      \mu_R \frac{d}{d\mu_R}\beta' &= &&\frac{4\beta'^2}{(4\pi)^2}\int_0^1 dx \frac{\mu_R^2 x\bar{x}}{m'^2 + 4/3 \mu_R^2 x \bar{x}} - \frac{8\alpha'^2\beta'}{(4\pi)^2}\mu_R^2 \int_0^1 dx \int_0^{1-x} dy \left(\frac{1}{\Delta_\beta^2} \right)^2 (x\bar{x} + 2 x y)+\\
+      & &&+ \frac{16\alpha'^4}{(4\pi)^2}\mu_R^2\int_0^1 dx_1 \int_0^{1-x_1} dx_2 \int_0^{1-x_1-x_2} dx_3 \left(\frac{1}{\Box_\beta^2}\right)^3 (x_3\overbar{x_3} + x_1 x_2 + 2 x_1 x_3 - x_2 x_3)+\\
+      & &&+ \frac{2\alpha'^2\beta'}{(4\pi)^2}\int_0^1 dx \frac{(x\bar{x})^2\mu_R^2}{(m'^2 + \mu_R^2 x\bar{x})^2}\\
+      \mu_R \frac{d}{d\mu_R}m' &= &&-\frac{\alpha'^2}{m}\frac{1}{2(4\pi)^2}\left[\int_0^1 dx \frac{\mu_R^2m'^2 x\bar{x}}{(m'^2 + \mu_R^2 x\bar{x})^2} - \int_0^1 dx \frac{\mu_R^2 x\bar{x}}{m'^2+\mu_R^2 x \bar{x}} \right]+\\
+      & &&+\frac{\alpha'^2 m'}{2(4\pi)^2}\int_0^1 dx \frac{\mu_R^2 (x\bar{x})^2}{(m'^2+\mu_R^2 x\bar{x})^2}
+    \end{alignat*}
+    where
+    \begin{alignat*}{2}
+      \Delta_\alpha^2 &= m'^2 &&+ 2\mu_R^2 x\bar{x} - m'^2y\bar{y}-2\mu_R^2 x y\\
+      \Delta_\beta^2 &= m'^2 &&+ \frac{4}{3}\mu_R^2 x\bar{x} - m'^2 y\bar{y} + 4\left(\frac{2}{3}\mu_R^2 + m'^2 \right)x y\\
+      \Box_\beta^2 &= m'^2 &&- m'^2 x_2 \overbar{x_2} - m'^2 x_1\overbar{x_1} + \frac{4}{3}\mu_R^2 x_3\overbar{x_3} + \left(\frac{4}{3}\mu_R^2+ 2m^2 \right)x_1 x_2 +\\
+      & &&+\left(\frac{8}{3}\mu_R^2+4m^2 \right)x_1 x_3 -\frac{4}{3}\mu_R^2 x_2 x_3
+    \end{alignat*}
+    and
+    \begin{equation*}
+      \overbar{x_i} = 1-x_i.
+    \end{equation*}
+
+    \begin{figure}
+      \centering
+      \includegraphics[width=0.8\paperwidth]{../pres/images/running_cropped.pdf}
+      \caption{Evolution of the effective couplings $\alpha'$ and $\beta'$ as computed by the RGEs in the $\overbar{\text{MS}}$ and the on-shell renormalization scheme defined in Equation \ref{on-shell-variable}. Initial values for the couplings at a scale of $\mu_R = m$ are $\alpha'(m) = 0.2$ and $\beta'(m) = 0.1$.}
+      \label{running}
+    \end{figure}
+
+    The evolution of the cubic and quartic scalar couplings has interesting physical consequences. If one interprets the scalar $\phi$ of this toy-EFT as a Higgs-like boson after spontaneous symmetry breaking, the couplings $\alpha'$ and $\beta'$ are related to the parameters of the Higgs potential. If we start from a $SU(2)$ scalar doublet $\Phi$ as it occurs in the SM, the Higgs potential is
+    \begin{equation}
+      V(\Phi) = -\mu_H^2 \Phi^\dagger\Phi + \lambda_H (\Phi^\dagger\Phi)^2,
+    \end{equation}
+    with $\mu_H^2 > 0$ and $\lambda_H > 0$ to allow for a nontrivial vacuum expectation value (vev). In unitary gauge, we can then parametrize fluctuations around the vev $v$
+    as
+    \begin{equation}
+      \Phi = {{0}\choose{\frac{1}{\sqrt{2}}(v+\phi)}}
+    \end{equation}
+    whereupon the potential $V(\Phi)$ gives rise to cubic and quartic interactions like $\lambda_H v \phi^3 + \frac{\lambda_H}{4}\phi^4 \in V(\Phi)$. From this, we can identify our effective couplings $\alpha'$ and $\beta'$.
+
+    As long as the vacuum is in a state of nonvanishing vev $v$, both $\alpha', \beta' > 0$. However, a dramatic \textsl{phase transition} is expected to occur if the \textsl{quartic} coupling $\beta'$ can vanish or even become negative. In such a case, the potential for $\phi$ would not admit a stable vacuum state anymore. Looking at Figure \ref{running}, however, we see that as long as they are found to be positive at the light scale, the RGE evolution guarantees that they remain positive also at higher energy scales. Thus, the vacuum in this model is stable and there is no danger of a phase transition.
+
+    The situation is different for the SM, however, where the quartic Higgs coupling is found to \textsl{decrease} with increasing energy, vanishing at energies that are of the order of the Planck scale \cite{vacuum-stability-SM}. This implies that the SM seems to sit in a region of \textsl{vacuum metastability}.
+    
+    \subsection{Effective theory in the opposite limit}
+    \label{fermion-eft}
+    Up to now, we have not made use of the term $\mathcal{L}_{D>4}$ in Equation \ref{EFT-L}. To illustrate a situation where higher-dimensional operators \textsl{are} needed, let us now consider the opposite limit of a \textsl{heavy} scalar particle $\phi$ with mass $M_\phi$ and a \textsl{light} fermion $\psi$ with mass $m_\psi$. Here, it will suffice to carry out the matching at tree-level only.
+
+    The UV-Lagrangian now reads
+    \begin{equation}
+      \mathcal{L_\text{UV}} = \bar\psi (i\slashed\partial - m_\psi)\psi +  \frac{1}{2}(\partial_\mu \phi)(\partial^\mu \phi) - \frac{1}{2} M_\phi^2 \phi^2 - \lambda \bar\psi \psi \phi - \frac{\alpha}{3!}\phi^3 - \frac{\beta}{4!}\phi^4
+    \end{equation}
+    Since we will limit ourselves to tree-level calculations in this section, we do not need to distinguish between \textsl{bare} and \textsl{renormalized} couplings and fields.
+
+    We now go over to an EFT for the field $\psi$. In contrast with the previous example, we have no tree-level interactions among fermions in the UV Lagrangian to carry over to the EFT. In the spirit of Section \ref{sm-eft}, where we saw that higher-dimensional operators are suppressed by additional powers of some heavy mass $\Lambda$, let us include a \textsl{new} interaction of dimension six into the EFT-Lagrangian:
+    \begin{equation}
+      \mathcal{L}_{\text{eff}} = \bar\psi (i\slashed\partial - m_\psi)\psi + \frac{c}{2}\bar\psi \psi \bar\psi \psi + \delta\mathcal{L}_{D>6}
+    \end{equation}
+    We have not made any distinction between the fields in the EFT and the UV-theory, since we have seen previously that corrections will only come in at one-loop level.
+
+    To determine the value of the Wilson coefficient $c$ at tree level, we need to match the fermion 4-point functions computed in both theories. The condition thus is\\[1em]
+    
+    \begin{equation*}
+      \begin{gathered}\begin{fmfgraph*}(65,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{fermion}{i1,v1,o1}
+          \fmf{fermion}{i2,v1,o2}
+          \fmfeff{v1}
+          \fmflabel{$2, \beta$}{i1}
+          \fmflabel{$1, \alpha$}{i2}
+          \fmflabel{$4, \bar\beta$}{o1}
+          \fmflabel{$3, \bar\alpha$}{o2}
+      \end{fmfgraph*}\end{gathered}
+      \qquad
+      =
+      \qquad
+      \begin{gathered}\begin{fmfgraph*}(65,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{fermion}{i1,v1,o1}
+          \fmf{fermion}{i2,v2,o2}
+          \fmf{dashes}{v1,v2}
+          \fmfdot{v1,v2}
+          \fmflabel{$2, \beta$}{i1}
+          \fmflabel{$1, \alpha$}{i2}
+          \fmflabel{$4, \bar\beta$}{o1}
+          \fmflabel{$3, \bar\alpha$}{o2}
+      \end{fmfgraph*}\end{gathered}
+      - \text{(crossed)},
+    \end{equation*}\\[1em]
+i.e.~
+    \begin{align}
+      \begin{split}
+      i c (\delta_{\bar\beta\beta}\delta_{\bar\alpha\alpha} - \delta_{\bar\alpha\beta}\delta_{\bar\beta\alpha}) &= (-i\lambda)^2 \frac{i}{(p_1 - p_3)^2 - M_\phi^2} (\delta_{\bar\beta\beta}\delta_{\bar\alpha\alpha} - \delta_{\bar\alpha\beta}\delta_{\bar\beta\alpha})\\
+      &= (-i\lambda)^2 \frac{-i}{M_\phi^2} \left(1 + \frac{(p_1-p_3)^2}{M_\phi^2} + \ldots \right)(\delta_{\bar\beta\beta}\delta_{\bar\alpha\alpha} - \delta_{\bar\alpha\beta}\delta_{\bar\beta\alpha})\\
+      &= i \frac{\lambda^2}{M_\phi^2}\left(1 + 2\frac{m_\psi^2}{M_\phi^2} - 2\frac{p_1\cdot p_3}{M_\phi^2}\right)(\delta_{\bar\beta\beta}\delta_{\bar\alpha\alpha} - \delta_{\bar\alpha\beta}\delta_{\bar\beta\alpha}).
+      \end{split}
+      \label{matching-wo-derivatives}
+    \end{align}
+
+    Again, since $c$ is a constant, we cannot account for the momentum dependence in the EFT. Since this dependency comes in at $\mathcal{O}(m_\psi^2/M_\phi^4)$, we can consistently determine the Wilson coefficient only to $\mathcal{O}(1/M_\phi^2)$:
+    \begin{equation}
+      c = \frac{\lambda^2}{M_\phi^2}
+    \end{equation}
+
+    We can match the four-fermion interaction to $\mathcal{O}(m_\psi^2/M_\phi^4)$ only by including a momentum-dependent vertex:
+    \begin{equation}
+      \tilde{\mathcal{L}}_{\text{eff}} = \bar\psi (i\slashed\partial - m_\psi)\psi + \frac{\tilde{c}}{2}\bar\psi \psi \bar\psi \psi + \tilde{d} (\partial_\mu \overbar\psi)(\partial^\mu \psi)\overbar\psi \psi.
+    \end{equation}
+
+    If we represent this new interaction by a filled square, the matching condition now reads
+    \begin{equation*}
+      \begin{gathered}\begin{fmfgraph*}(65,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{fermion}{i1,v1,o1}
+          \fmf{fermion}{i2,v1,o2}
+          \fmfeff{v1}
+      \end{fmfgraph*}\end{gathered}
+      +
+      \begin{gathered}\begin{fmfgraph*}(65,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{fermion}{i1,v1,o1}
+          \fmf{fermion}{i2,v1,o2}
+          \fmfeffd{v1}
+      \end{fmfgraph*}\end{gathered}
+      =
+      \begin{gathered}\begin{fmfgraph*}(65,50)
+          \fmfleft{i1,i2}
+          \fmfright{o1,o2}
+          \fmf{fermion}{i1,v1,o1}
+          \fmf{fermion}{i2,v2,o2}
+          \fmf{dashes}{v1,v2}
+          \fmfdot{v1,v2}
+      \end{fmfgraph*}\end{gathered}
+      - \text{(crossed)}
+    \end{equation*}
+
+    and the left-hand side of Equation \ref{matching-wo-derivatives} is modified to
+    \begin{equation}
+      i\left[\tilde{c} + 2 \tilde{d} (p_1\cdot p_3)\right] (\delta_{\bar\beta\beta}\delta_{\bar\alpha\alpha} - \delta_{\bar\alpha\beta}\delta_{\bar\beta\alpha}),
+    \end{equation}
+
+    which allows us to identify
+    \begin{align}
+      \begin{split}
+        \tilde{c} &= \frac{\lambda^2}{M_\phi^2}\left(1 + 2\frac{m_\psi^2}{M_\phi^2}\right),\\
+        \tilde{d} &= -\frac{\lambda^2}{M_\phi^4}.
+      \end{split}
+    \end{align}
+
+    \noindent A final comment is in order about the last line in Equation \ref{matching-wo-derivatives}, where we have put the external particles on-shell, i.e.~$p_i^2 = m_\psi^2$. Had we kept the external momenta general, we would have needed to include another derivative operator, $\left(\partial^2\overbar{\psi}\right)\psi\overbar{\psi}\psi$, to be able to complete the matching. However, this operator can be removed from the Lagrangian in favour of operators of a higher order in the coupling and the fields by making use of the equations of motion for $\psi$. Therefore, by matching the EFT \textsl{on-shell} we do not lose any information \cite{on-shell-georgi}.
+
+    \section{A Practical Application}
+    \label{ggh-section}
+    After studying this toy theory in quite some detail, let us turn our attention to a more phenomenologically relevant example of an EFT.
+    
+    \subsection{The $ggh$ effective vertex}
+    The dominant channel for Higgs production at a hadron collider proceeds through the fusion of two gluons. Since there is no direct coupling of gluons to the Higgs, the leading contribution arises at one-loop level:\\[2mm]
+    \begin{equation}
+      \underset{\text{(B)}}{
+        \begin{gathered}\begin{fmfgraph*}(80,60)
+            \fmfstraight
+            \fmfleft{i1,i2}
+            \fmfright{o1}
+            \fmflabel{$p_2$}{i1}
+            \fmflabel{$p_1$}{i2}
+            \fmflabel{$h$}{o1}
+            \fmf{gluon}{i1,v1}
+            \fmf{gluon}{i2,v2}
+            \fmf{fermion, tension=0.5}{v2,v1}
+            \fmf{fermion, tension=0.5}{v3,v2}
+            \fmf{fermion, tension=0.5}{v1,v3}
+            \fmf{dashes}{v3,o1}
+            \fmfdot{v1,v2,v3}
+      \end{fmfgraph*}\end{gathered}}
+      \qquad + \quad
+      \underset{\text{(A)}}{
+        \begin{gathered}\begin{fmfgraph*}(80,60)
+            \fmfstraight
+            \fmfleft{i1,i2}
+            \fmfright{o1}
+            \fmflabel{$p_2$}{i1}
+            \fmflabel{$p_1$}{i2}
+            \fmflabel{$h$}{o1}
+            \fmf{gluon}{i1,v1}
+            \fmf{gluon}{i2,v2}
+            \fmf{fermion, tension=0.5}{v1,v2}
+            \fmf{fermion, tension=0.5}{v2,v3}
+            \fmf{fermion, tension=0.5}{v3,v1}
+            \fmf{dashes}{v3,o1}
+            \fmfdot{v1,v2,v3}
+      \end{fmfgraph*}\end{gathered}}
+      \label{ggh-diagram}
+    \end{equation}\\[2mm]
+
+    In principle, any of the quarks can be the fermion running inside the loop. However, since the coupling of the Higgs boson is proportional to the mass of the fermion, the dominant contribution comes from the top quark. Once also higher-loop contributions are taken into account however, for consistency also the next heaviest quark, the bottom, must be considered. It will generate contributions that are of the same order as the higher-loop corrections for the top quark. Throughout the following calculations, we will assume that the top quark in the loop is indeed much heavier than the Higgs boson, i.e.~$\frac{m_H^2}{4m_t^2}\ll 1$.
+
+    We would now like to describe the gluon-gluon fusion in an effective theory in which the heavy top quark does not exist. After integrating out the heavy quark (i.e.~shrinking the internal loop to a point), we see the form the effective vertex is going to take:\\[1mm]
+
+    \begin{equation*}
+      \begin{gathered}\begin{fmfgraph*}(80,60)  
+          \fmfleft{i1,i2}
+          \fmfright{o1}
+          \fmflabel{$p_2$}{i1}
+          \fmflabel{$p_1$}{i2}
+          \fmf{gluon}{i1,v1}
+          \fmf{gluon}{i2,v1}
+          \fmf{dashes}{v1,o1}
+          \fmfv{decor.shape=diamond,decor.filled=empty,decor.size=4thick}{v1}
+      \end{fmfgraph*}\end{gathered}
+    \end{equation*}\\[1mm]
+
+    To determine the structure of the corresponding interaction term in the EFT, we will first need to compute the diagrams in Equation \ref{ggh-diagram}. For the purpose of the matching, it again suffices to carry out the calculation with the external gluons on-shell.
+
+    The two graphs then translate into
+    \begin{multline}
+      i\mathcal{M}_A = (-1)\mu^{2\eps} \lint \Tr\left[(-i g_s \slashed{\eps_1} T^a_{ij}) \frac{i(\slashed{k} - \slashed{p_1}) + m}{(k-p_1)^2-m^2}\left(-i \frac{m}{v}\right) \frac{i(\slashed{k} + \slashed{p_2} + m}{(k+p_2)^2-m^2} \times\right.\\\left.\times(-ig_s \slashed{\eps_2} T^b_{ji})\frac{i(\slashed{k} + m)}{k^2-m^2} \right]
+    \end{multline}
+
+    \begin{multline}
+      i\mathcal{M}_B = (-1)\mu^{2\eps} \lint \Tr\left[(-i g_s \slashed{\eps_2} T^b_{ij}) \frac{i(\slashed{k} - \slashed{p_2}) + m}{(k-p_2)^2-m^2} \left(-i \frac{m}{v}\right) \frac{i(-\slashed{k} + \slashed{p_1} + m}{(k-p_1)^2-m^2} \times\right.\\\left.\times(-ig_s \slashed{\eps_1} T^a_{ji})\frac{i(\slashed{-k} + m)}{k^2-m^2} \right]
+    \end{multline}
+
+    \noindent Adding these two contributions, we get
+    \begin{multline}
+      - g_s^2\mu^{2\eps} \frac{m}{v} \Tr(T^a T^b) (\eps_1)_\mu (\eps_2)_\nu \lint \frac{1}{D_1 D_2 D_3} \Tr\left[(\slashed{k} + \slashed{p_2} + m)\gamma^\nu(\slashed{k} + m)\gamma^\mu (\slashed{k} - \slashed{p_1} + m) +\right.\\\left.+ (-\slashed{k} + \slashed{p_1} + m)\gamma^\mu (-\slashed{k} + m)\gamma^\nu (-\slashed{k} - \slashed{p_2} + m) \right],
+      \label{ggh-amplitude}
+    \end{multline}
+
+    where we have introduced a shorthand notation for the denominators:
+    \begin{align*}
+      D_1 &= (k-p_1)^2-m^2,\\
+      D_2 &= (k+p_2)^2-m^2,\\
+      D_3 &= k^2-m^2.
+    \end{align*}
+
+    \noindent After evaluating the trace in Equation \ref{ggh-amplitude}, we find three different types of integrals that can be efficiently computed with the strategy of expansion by regions:
+    \begin{multline}
+      \lint \frac{1}{D_1D_2D_3} = \lint \frac{1}{(k^2-m^2)^3}\left[1 + \frac{2p_1\cdot k}{k^2-m^2} + \left(\frac{2p_1\cdot k}{k^2-m^2}\right)^2 + \ldots \right]\times\\\times\left[1 - \frac{2p_2\cdot k}{k^2-m^2} + \left(\frac{2p_2\cdot k}{k^2-m^2}\right)^2 + \ldots\right] =\\=
+      -\frac{i}{(4\pi)^{2-\eps}}\Gamma(1+\eps) (m^2)^{-1-\eps} \left[\frac{1}{2} + \frac{1}{12}(1+\eps)\frac{p_1\cdot p_2}{m^2} + \frac{1}{90}\left(\frac{p_1\cdot p_2}{m^2}\right)^2(1+\eps)(2+\eps) + \ldots\right].
+    \end{multline}
+
+    \noindent In the same fashion
+    \begin{multline}
+      \lint \frac{k^2}{D_1D_2D_3} = g_{\mu\nu} \lint \frac{k^\mu k^\nu}{(k^2-m^2)^3}\left[1 + \frac{2p_1\cdot k}{k^2-m^2} + \left(\frac{2p_1\cdot k}{k^2-m^2}\right)^2 + \ldots \right]\times\\\times\left[1 - \frac{2p_2\cdot k}{k^2-m^2} + \left(\frac{2p_2\cdot k}{k^2-m^2}\right)^2 + \ldots\right] =\\=
+      \frac{i}{(4\pi)^{2-\eps}} (m^2)^{-\eps} \left[\Gamma{\eps} \frac{4-2\eps}{4} + \Gamma(1+\eps) \frac{6-2\eps}{24} \frac{p_1\cdot p_2}{m^2} + \ldots\right]
+    \end{multline}
+
+    and, reusing the same expansion yet another time
+
+    \begin{multline}
+      \lint \frac{(\eps_1\cdot k)(\eps_2 \cdot k)}{D_1D_2D_3} =\\=
+      \frac{i}{(4\pi)^{2-\eps}} (m^2)^{-\eps} \left[\frac{\Gamma(\eps)}{4} (\eps_1\cdot \eps_2) + \frac{\Gamma(1+\eps)}{24m^2}\left[(\eps_1\cdot \eps_2)(p_1 \cdot p_2) + (\eps_1 \cdot p_2)(\eps_2 \cdot p_1) \right] + \ldots\right]
+    \end{multline}
+
+    Plugging these results into Equation \ref{ggh-amplitude}, we see that the divergent terms cancel out, as one expects. Making use of $\Tr(T^a T^b) = \frac{1}{2}\delta^{ab}$, we find
+    \begin{equation}
+      i\mathcal{M}_{gg} = i \frac{\alpha_s}{3\pi v}\delta^{ab} (\eps_1)_\mu (\eps_2)_\nu \left[p_1^\nu p_2^\mu - (p_1\cdot p_2) g^{\mu\nu} \right]
+    \end{equation}
+    
+    Now we need to write down an operator in the effective theory that is able to reproduce this vertex structure. A possible candidate is
+    \begin{equation}
+      \mathcal{L}_{\text{int}} = -\frac{C}{4v} h G_a^{\mu\nu} G^a_{\mu\nu},
+    \end{equation}
+    where $h$ is the Higgs field and $G^a_{\mu\nu} = \partial_\mu A_\nu^a - \partial_\nu A_\mu^a - g_s f^{abc}A_\mu^b A_\nu^c$ is the gauge-covariant field strength tensor of QCD. By convention, we have also factored out the Higgs vacuum expectation value $v$.
+
+    As can be checked by expanding the expression above, a vertex with the correct $ggh$ tensor structure is indeed contained. This enables us to fix the Wilson coefficient $C$, which, at one-loop order, reads
+
+    \begin{equation}
+      C^{(1)} = \frac{\alpha_s}{3\pi}.
+    \end{equation}
+
+    What is crucial about this result is that the mass $m$ of the heavy quark inside the loop has completely disappeared. Even if we send $m\rightarrow \infty$, we will still have the \textsl{same} effective coupling. Conversely, this can be used to place constraints about the existance of a fourth generation of chiral quarks. If such new fermions existed and they obtained their masses through the Higgs mechanism, they would also contribute to the process we just calculated. Experimentally, the total cross section would then be higher by about a factor of nine compared to the case where only the top quark is relevant. However, measurements fit the prediction above very nicely, thereby ruling out new particles of this kind.
+
+    Note also that this interaction term automatically also produces $gggh$ and $ggggh$ vertices. An important observation is that all these vertices come with the same, universal Wilson coefficient. For example, the Feynman rule for the $gggh$-vertex is analogous to the QCD-triple gluon vertex:
+    \\[2mm]
+    \begin{equation*}
+      \begin{gathered}\begin{fmfgraph*}(80,60)  
+          \fmfleft{i1,i2,i3}
+          \fmfright{o1}
+          \fmflabel{$p_3, \sigma, c$}{i1}
+          \fmflabel{$p_2, \nu, b$}{i2}
+          \fmflabel{$p_1, \mu, a$}{i3}
+          \fmf{gluon}{i1,v1}
+          \fmf{gluon}{i2,v1}
+          \fmf{gluon}{i3,v1}
+          \fmf{dashes, label=$h$}{v1,o1}
+          \fmfv{decor.shape=diamond,decor.filled=empty,decor.size=4thick}{v1}
+      \end{fmfgraph*}\end{gathered}
+      = \frac{C}{v}g_s f^{abc}\left[(p_1 - p_2)_\sigma g_{\mu\nu} + (p_2 - p_3)_\mu g_{\nu\sigma} + (p_3 - p_1)_\nu g_{\mu\sigma} \right]
+    \end{equation*}\\[1mm]
+
+    Indeed, this is also what one finds from an explicit calculation in the full theory, based on the diagrams
+    \\[3mm]
+    \begin{equation}
+      \underset{\text{(A)}}{
+        \begin{gathered}\begin{fmfgraph*}(100,80)
+            \fmfstraight
+            \fmfleft{i1,i2,i3}
+            \fmfright{o1}
+            \fmflabel{$p_3$}{i1}
+            \fmflabel{$p_2$}{i2}
+            \fmflabel{$p_1$}{i3}
+            \fmflabel{$h$}{o1}
+            \fmf{gluon}{i1,v1}
+            \fmf{gluon, tension=0.0}{i2,v2}
+            \fmf{gluon}{i3,v3}
+            \fmf{fermion, tension=0.5}{v2,v1}
+            \fmf{fermion, tension=0.5}{v3,v2}
+            \fmf{fermion, tension=0.5}{v4,v3}
+            \fmf{fermion, tension=0.5}{v1,v4}
+            \fmf{dashes}{v4,o1}
+            \fmfdot{v1,v2,v3,v4}
+      \end{fmfgraph*}\end{gathered}}
+      \qquad + \qquad
+      \underset{\text{(B)}}{
+        \begin{gathered}\begin{fmfgraph*}(100,80)
+            \fmfstraight
+            \fmfleft{i1,i2,i3}
+            \fmfright{o1}
+            \fmflabel{$p_3$}{i1}
+            \fmflabel{$p_2$}{i2}
+            \fmflabel{$p_1$}{i3}
+            \fmflabel{$h$}{o1}
+            \fmf{gluon}{i1,v1}
+            \fmf{gluon, tension=0.0}{i2,v2}
+            \fmf{gluon}{i3,v3}
+            \fmf{fermion, tension=0.5}{v1,v2}
+            \fmf{fermion, tension=0.5}{v2,v3}
+            \fmf{fermion, tension=0.5}{v3,v4}
+            \fmf{fermion, tension=0.5}{v4,v1}
+            \fmf{dashes}{v4,o1}
+            \fmfdot{v1,v2,v3,v4}
+      \end{fmfgraph*}\end{gathered}}
+      \qquad +\text{(perm.)}
+      \label{gggh-diagram}
+    \end{equation}
+
+    This new effective interaction now allows one to compute the NLO-corrections to the $gg\rightarrow h$ reaction with a one-loop calculation in the heavy-quark limit (using the full theory would require already a much more involved two-loop computation). The relevant diagrams include
+    \begin{equation*}
+      \begin{gathered}\begin{fmfgraph*}(100,80)
+          \fmfleft{i1,i2}
+          \fmfright{o1}
+          \fmf{gluon}{i1,v1}
+          \fmf{gluon}{i2,v2}
+          \fmf{gluon}{v1,v3,v2,v1}
+          \fmf{dashes}{v3,o1}
+          \fmfdot{v1,v2}
+          \fmfv{decor.shape=diamond,decor.filled=empty,decor.size=4thick}{v3}
+      \end{fmfgraph*}\end{gathered}
+      \qquad
+      \begin{gathered}\begin{fmfgraph*}(100,80)
+          \fmfleft{i1,i2}
+          \fmfright{o1}
+          \fmf{gluon}{i1,v1}
+          \fmf{gluon}{i2,v1}
+          \fmf{gluon,left}{v1,v2}
+          \fmf{gluon,left}{v2,v1}
+          \fmf{dashes}{v2,o1}
+          \fmfdot{v1}
+          \fmfv{decor.shape=diamond,decor.filled=empty,decor.size=4thick}{v2}
+      \end{fmfgraph*}\end{gathered}
+    \end{equation*}
+
+    \section{Conclusion}
+    Effective Field Theories form a versatile framework that builds on deeply rooted principles in physics, namely that vastly different scales tend to separate and can be looked at separately. This yields great simplifications and allows one to see the relevant physical effects more clearly, freed from unnecessary complexity. Through examples, we have seen how EFTs can be systematically constructed for various limits of a known UV-complete theory and commented on the physical relevance of the results obtained and their relation to the Standard Model.
+
+    A different aspect of EFTs that is expected to be of great importance for the imminent future of experimental high energy physics, namely the parametrization of effects beyond the Standard Model through the systematic inclusion of new, higher-dimensional operators, was also briefly touched upon.    
+    % end of content
+    \nocite{*}
+    \printbibliography
+
+  %\end{multicols}
+
+
+\end{fmffile}
+\end{document}
+
+
