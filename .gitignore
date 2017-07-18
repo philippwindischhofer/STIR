@@ -62,13 +62,13 @@ install_manifest.txt
 *.suo
 *.user
 *.sln.docstates
-*.pdf
+# *.pdf
 *.manifest
 *.exp
 
 # MATLAB
 
-*.pdf
+# *.pdf
 *.manifest
 
 # MATLAB
