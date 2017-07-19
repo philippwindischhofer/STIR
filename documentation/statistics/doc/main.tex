@@ -10,50 +10,31 @@
 \usepackage{amsmath,mathtools}
 \usepackage{amssymb}
 \usepackage{bm}
-\usepackage[super]{nth}
 \usepackage{url}
 \usepackage{subfig}
 \usepackage{wasysym}
-\usepackage{slashed}
 \usepackage{fancyhdr}
-\usepackage{lipsum}
 \usepackage[top=1.0in, bottom=0.9in, left=0.8in, right=0.8in]{geometry}
 \usepackage{datetime}
 \usepackage{verbatim}
 \usepackage{siunitx}
-\usepackage{feynmp}
 \usepackage{fancybox}
 \usepackage{empheq}
 \usepackage{braket}
 \usepackage{multicol}
 \usepackage{listings}
 
-\usepackage{forest}
+\usepackage[edges]{forest}
+\usepackage{calc}
 
-\tikzset{
-  my file/.pic={
-    \draw [icon/.cd, style, #1] (0,-\iconheight) |- +([xshift=-.2*\iconwidth]\iconwidth,\iconheight) edge +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- cycle;
-  },
-  icon/.search also={/tikz},
-  icon/.cd,
-  width/.store in=\iconwidth,
-  height/.store in=\iconheight,
-  margin/.store in=\iconmargin,
-  style/.style={fill=gray!50!blue!25},
-  width=7.5pt,
-  height=10pt,
-  margin=2.5pt,
-  main/.style={inner color=white, outer color=red},
-  dim/.style={fill=gray!25},
-  elk/.style={top color=blue, bottom color=blue, middle color=cyan},
-}
+\usepackage[]{algorithm2e}
 
 \forestset{
   declare toks={my label}{},
   declare toks={my details}{},
   declare boolean={my icon}{0},
-  minecraft schematic/.style={
-    for tree={
+  minecraft schematic/.style={% addaswyd o ateb: http://tex.stackexchange.com/a/340354/
+    for tree={% addaswyd o gôd Gonzalo Medina: http://tex.stackexchange.com/a/270761/
       folder,
       font=\sffamily,
       grow'=0,
@@ -73,16 +54,31 @@
     tikz+={
       \pic at ([xshift=\iconmargin,yshift=-.1*\baselineskip].north west) {my file={#1}};
     },
-    edge path'/.expanded={
+    edge path'/.expanded={% addaswyd o forest-lib-edges.sty
       ([xshift=\forestregister{folder indent}]!u.parent anchor) |- ([xshift=-.5*\iconmargin,yshift=-.5*\iconheight].north west)
     },
   }
 }
+\tikzset{
+  my file/.pic={
+    \draw [icon/.cd, style, #1] (0,-\iconheight) |- +([xshift=-.2*\iconwidth]\iconwidth,\iconheight) edge +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- cycle;
+  },
+  icon/.search also={/tikz},
+  icon/.cd,
+  width/.store in=\iconwidth,
+  height/.store in=\iconheight,
+  margin/.store in=\iconmargin,
+  style/.style={fill=gray!50!blue!25},
+  width=7.5pt,
+  height=10pt,
+  margin=2.5pt,
+  main/.style={inner color=white, outer color=red},
+  dim/.style={fill=gray!25},
+  elk/.style={top color=blue, bottom color=blue, middle color=cyan},
+}
 
 
-% \usepackage[]{algorithm2e}
-
-% \sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
+%\sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
 
 % literature
 \usepackage[style=phys,maxbibnames=6,articletitle=true,biblabel=brackets,%
@@ -282,9 +278,12 @@
   More Python scripts that were used for various tests (of algorithms different from the one explained in Section \ref{raymarching}) are available in an independent repository\footnote{https://gitlab.phys.ethz.ch/luster/tf-raytracing}. Its contents is as follows.
   \subsection{Repository overview}
 
+  
+  \section{Futher information}
+  
   \begin{forest}
     minecraft schematic,
-    %where level<=2{icon}{},
+    where level<=2{icon}{},
     [Schematic:Schematic data., icon=main
       [Various:Things
         [Other:Various things
@@ -309,9 +308,6 @@
       ]
     ]
   \end{forest}
-  
-  \section{Futher information}
-      
 
 \end{document}
 
