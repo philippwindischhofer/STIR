@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1500394003 "main.tex" "main.pdf" "main" 1500394003
+["pdflatex"] 1500457506 "main.tex" "main.pdf" "main" 1500457507
   "../2_iterations_20LORs.png" 1500297380 16815 25f763b7c00892c0dd7973e42f7fd428 ""
   "../ExampleGraph.png" 1500386110 25931 14741d0574a8d4002ad199862e9080fb ""
   "../Horizontal.pdf" 1500375235 1388 131d1b7de3f781c379f9c17a065b040e ""
@@ -209,16 +209,16 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1392645748 31083 1dfd8bf685ce0009c40532fedf8a7c53 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1460015578 1346346 7f2b8b715a9ddb095afe3697a6ba02b5 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1460015502 3822873 b4e186bf32dbd1c7adeb80b11f9903ec ""
-  "main.aux" 1500394003 6444 85d76de836de8f2733bd6bc703ca8323 ""
-  "main.nav" 1500394003 3150 e4833814639f1919b67600e61407e7f4 ""
-  "main.out" 1500394003 283 fd920ac96921be8128d2436f0639c0ae ""
-  "main.tex" 1500394000 11304 ebdae2bea58feb5cf5781631eb5cc439 ""
-  "main.toc" 1500394003 330 d6cb69a8dfcdddb05d142b8d76b1cdbe ""
+  "main.aux" 1500457507 6444 85d76de836de8f2733bd6bc703ca8323 ""
+  "main.nav" 1500457507 3150 e4833814639f1919b67600e61407e7f4 ""
+  "main.out" 1500457507 283 fd920ac96921be8128d2436f0639c0ae ""
+  "main.tex" 1500457448 11477 9b30a9a33df44515dfd324c11b3067bd ""
+  "main.toc" 1500457507 330 d6cb69a8dfcdddb05d142b8d76b1cdbe ""
   (generated)
-  "main.log"
   "main.nav"
+  "main.pdf"
   "main.toc"
   "main.out"
-  "main.pdf"
   "main.aux"
+  "main.log"
   "main.snm"

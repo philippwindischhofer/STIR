@@ -53,7 +53,6 @@ find_package( Boost 1.36.0 REQUIRED )
 include_directories(${Boost_INCLUDE_DIRS})
 
 ###############################################################
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 message(STATUS "module path: ${CMAKE_MODULE_PATH}")
 
