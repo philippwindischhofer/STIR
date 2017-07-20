@@ -1,5 +1,7 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+#mpl.rcParams['font.size'] = 29.0
 
 def extract_int(line):
     numbers = [int(s) for s in line.rstrip().split("=") if s.isdigit()]
@@ -148,7 +150,7 @@ def parse_tf_file(path):
 
 print("parsing Siddon output")
 # main program
-point_count, matrix_count, time, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_siddon_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_siddon_6_iterations.log")
+point_count, matrix_count, time, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_siddon_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_siddon.log")
 
 print("Siddon statistics")
 mpps_siddon = np.divide(point_count, time)
@@ -168,7 +170,7 @@ print(time)
 print("----------------------------------------")
 
 print("parsing TF output")
-total_time, GPU_time, copyHL_time, copyLL_time, scheduling_time, rt_time, fp_time, total_points, matrix_elements, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_tf_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_tf_6_iterations.log")
+total_time, GPU_time, copyHL_time, copyLL_time, scheduling_time, rt_time, fp_time, total_points, matrix_elements, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_tf_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_tf.log")
 
 print("TF statistics")
 mpps_tf = np.divide(total_points, total_time)
@@ -194,10 +196,11 @@ fp_time_mean = np.mean(fp_time)
 rest_time_mean = total_time_mean - GPU_time_mean - IO_time_mean - scheduling_time_mean - fp_time_mean
 
 fig, ax = plt.subplots()
-labels = 'GPU', 'I/O', 'point scheduling', 'forward projection', 'rest'
+labels = 'GPU', 'I/O', 'point\n scheduling', 'forward\n projection', 'rest'
 sizes = [GPU_time_mean, IO_time_mean, scheduling_time_mean, fp_time_mean, rest_time_mean]
 explode = (0.1, 0, 0, 0, 0)
-ax.pie(sizes, explode = explode, labels = labels, shadow = True, startangle = 90)
+ax.set_title("2 iterations (" + str(total_time_mean) + " ms)")
+ret = ax.pie(sizes, explode = explode, labels = labels, shadow = True, startangle = 90)
 ax.axis('equal')
 # plt.show()
 fig.savefig('forward_projection_time_distribution.pdf')
