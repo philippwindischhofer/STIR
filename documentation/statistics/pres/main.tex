@@ -254,6 +254,23 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \frametitle{The workflow}
+  \begin{figure}
+    \centering
+    \subfloat[][]{\includegraphics[width = 0.96\textwidth]{../global_workflow.pdf}\label{6its}}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tensorflow in STIR}
+    \begin{figure}
+    \centering
+    \only<1>{\subfloat[][]{\includegraphics[height = 0.72\textheight]{../ClassStructureSTIR.pdf}\label{6its}}}
+    \only<2>{\subfloat[][]{\includegraphics[height = 0.76\textheight]{../ClassStructureSTIRHighlighted.pdf}\label{6its}}}
+  \end{figure}
+\end{frame}
+
 \section{Results}
 \begin{frame}
   \frametitle{Speedup without caching}
@@ -273,8 +290,8 @@
   \frametitle{}
   \begin{figure}
     \centering
-      \subfloat[][]{\includegraphics[width = 0.5\textwidth]{../forward_projection_time_distribution_6_iterations.pdf}\label{6its}}
-      \subfloat[][]{\includegraphics[width = 0.5\textwidth]{../forward_projection_time_distribution_2_iterations.pdf}\label{2its}}
+      \subfloat[][]{\includegraphics[height = 0.33\textwidth]{../forward_projection_time_distribution_6_iterations_largefont_cropped.pdf}\label{6its}}
+      \subfloat[][]{\includegraphics[height = 0.33\textwidth]{../forward_projection_time_distribution_2_iterations_largefont_cropped.pdf}\label{2its}}
       \caption{\textbf{left}: 6 iterations, \textbf{right}: 2 iterations}
   \end{figure}
 
@@ -288,8 +305,8 @@
   \frametitle{Images}
   \begin{figure}
     \centering
-    \subfloat[][]{\includegraphics[height = 0.5\textwidth]{../2_iterations_20LORs.png}}
-    \subfloat[][]{\includegraphics[height = 0.5\textwidth]{../Siddon_CPU.png}\label{2its}}
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../2_iterations_20LORs.png}}
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
     \caption{\textbf{left}: 2 iterations, 20LORs per matrix element, \textbf{right}: original STIR}
   \end{figure}
   \begin{itemize}
