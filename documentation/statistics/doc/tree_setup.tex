@@ -1,0 +1,48 @@
+\forestset{
+  declare toks={my label}{},
+  declare toks={my details}{},
+  declare boolean={my icon}{0},
+  minecraft schematic/.style={
+    for tree={
+      folder,
+      font=\sffamily,
+      grow'=0,
+      text width=155mm,
+    },
+    before typesetting nodes={
+      for tree={
+        split option={content}{:}{my label,my details},
+        delay={
+          content/.process={On=?_OOw3}{my icon}{1}{\makebox[\iconwidth+\iconmargin]{}}{}{my label}{my details}{##1\textbf{##2:} ##3},
+        },
+      },
+    },
+  },
+  icon/.style={
+    my icon,
+    tikz+={
+      \pic at ([xshift=\iconmargin,yshift=-.1*\baselineskip].north west) {my file={#1}};
+    },
+    edge path'/.expanded={
+      ([xshift=\forestregister{folder indent}]!u.parent anchor) |- ([xshift=-.5*\iconmargin,yshift=-.5*\iconheight].north west)
+    },
+  }
+}
+\tikzset{
+  my file/.pic={
+    \draw [icon/.cd, style, #1] (0,-\iconheight) |- +([xshift=-.2*\iconwidth]\iconwidth,\iconheight) edge +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- +([yshift=-.2*\iconwidth]\iconwidth,\iconheight) |- cycle;
+  },
+  icon/.search also={/tikz},
+  icon/.cd,
+  width/.store in=\iconwidth,
+  height/.store in=\iconheight,
+  margin/.store in=\iconmargin,
+  style/.style={fill=gray!50!blue!25},
+  width=7.5pt,
+  height=10pt,
+  margin=2.5pt,
+  main/.style={inner color=white, outer color=red},
+  file/.style={inner color=white, outer color=white},
+  dim/.style={fill=gray!25},
+  elk/.style={top color=blue, bottom color=blue, middle color=cyan},
+}
