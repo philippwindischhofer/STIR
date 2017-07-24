@@ -293,7 +293,7 @@
   \section{Other approaches}
   Several different approaches to the problem of speeding up PET image reconstruction (or forward projection) exist and have been pursued in the literature. Most of them are based on CUDA, and none made use of Tensorflow.
   \begin{itemize}
-    
+    \item 
   \end{itemize}
   
   \section{Futher information}
