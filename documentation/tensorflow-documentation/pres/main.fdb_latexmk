@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1500880826 "main.tex" "main.pdf" "main" 1500880827
+["pdflatex"] 1500880826 "main.tex" "main.pdf" "main" 1500893308
   "../2_iterations_20LORs.png" 1500375397 16815 25f763b7c00892c0dd7973e42f7fd428 ""
   "../30_iterations_2LORs.png" 1500375397 15851 2b550a4b7c57abfeae8ab36c59f082b4 ""
   "../3_iterations_2LORs.png" 1500375397 16708 bf6a75bf3c6b56c6fa4f422ab1fe0887 ""
@@ -230,10 +230,10 @@
   "main.tex" 1500880824 14149 49d9c753836f41603c7c3e53ae0aab2e ""
   "main.toc" 1500880827 357 ddb0f39e53dd382acb1c057a08fc03fe ""
   (generated)
-  "main.log"
+  "main.pdf"
   "main.nav"
   "main.out"
-  "main.toc"
-  "main.pdf"
-  "main.aux"
+  "main.log"
   "main.snm"
+  "main.toc"
+  "main.aux"
