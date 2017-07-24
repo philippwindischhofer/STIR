@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-#mpl.rcParams['font.size'] = 29.0
+mpl.rcParams['font.size'] = 19.0
 
 def extract_int(line):
     numbers = [int(s) for s in line.rstrip().split("=") if s.isdigit()]
@@ -150,7 +150,7 @@ def parse_tf_file(path):
 
 print("parsing Siddon output")
 # main program
-point_count, matrix_count, time, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_siddon_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_siddon.log")
+point_count, matrix_count, time, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_siddon_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_siddon_6_iterations.log")
 
 print("Siddon statistics")
 mpps_siddon = np.divide(point_count, time)
@@ -170,7 +170,7 @@ print(time)
 print("----------------------------------------")
 
 print("parsing TF output")
-total_time, GPU_time, copyHL_time, copyLL_time, scheduling_time, rt_time, fp_time, total_points, matrix_elements, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_tf_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_tf.log")
+total_time, GPU_time, copyHL_time, copyLL_time, scheduling_time, rt_time, fp_time, total_points, matrix_elements, bp_time, viewgram_time, total_fw_time, total_bw_time = parse_tf_file("/home/pwindisc/stir_examples/examples_derenzo/OSMAPOSL/matrix_tf_6_iterations.log")
 
 print("TF statistics")
 mpps_tf = np.divide(total_points, total_time)
