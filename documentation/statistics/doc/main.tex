@@ -118,11 +118,22 @@
 
   To be able to use Tensorflow with STIR, we first need to compile it into a shared library, against which the STIR OSMAPOSL executable can be linked. To this end, follow the instructions here\footnote{\url{https://github.com/cjweeks/tensorflow-cmake}}. In Step 2, the external Protobuf and Eigen libraries have been installed locally and \textsl{not} added as external dependencies. Step 3 of the guide does not need to be performed, as the required changes to the \texttt{CMake}-files of STIR have already been made and included into the codebase (see below).
 
+
   The Tensorflow-enabled version of STIR, including the modified souce- and makefiles is available from a GIT repository\footnote{\url{https://github.com/philippwindischhofer/STIR/tree/stir-tf}} that is a clone of the official STIR repository\footnote{\url{https://github.com/UCL/STIR}}, where the modifications have been integrated into a new branch, \texttt{stir-tf}.
 
-  After the Tensorflow library has been compiled according to the above steps and installed into the default directory \texttt{/usr/local/}, STIR should compile by issuing a simple \texttt{make OSMAPOSL} command. In case Tensorflow is installed elsewhere, the installation path needs to be updated in the file \texttt{STIR\_SRC\_DIRECTORY/src/cmake/FindTensorFlow.cmake}.
+  Thus, to get a working version of the Tensorflow-enabled STIR version, first get a copy of the source tree:\\
+  \texttt{git clone -b stir-tf https://github.com/philippwindischhofer/STIR.git}\\
+  This will clone all the required source files into a folder named \texttt{STIR}. Then, create a new folder for the build process\\
+  \texttt{mkdir STIR/build}\\
+  and generate the makefiles by\\
+  \texttt{cd STIR/build/ \&\& cmake ..}\\
+  For the build process, change to the build directory and run \texttt{make}:\\
+  \texttt{cd build \&\& make OSMAPOSL}\\
 
+  Once the compilation has terminated, the \texttt{OSMAPOSL} executable will be located in \texttt{STIR/build/src\-/iterative/OSMAPOSL}.  
   
+   Please note that in case the Tensorflow shared library was not installed into the default path \texttt{/usr/local}, the installation path needs to be updated in the file \texttt{STIR\_SRC\_DIRECTORY/src/cmake\-/FindTensorFlow.cmake}.
+
 
   \subsubsection{Changes made to the Makefiles}
   \begin{itemize}

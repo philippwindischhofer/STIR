@@ -1,13 +1,13 @@
 # Fdb version 3
-["bibtex main"] 1500887186 "main.aux" "main.bbl" "main" 1500888335
+["bibtex main"] 1500890807 "main.aux" "main.bbl" "main" 1500890833
   "/usr/share/texmf-dist/bibtex/bst/biblatex/biblatex.bst" 1492489108 63002 075c3f13314e99e71e6ff0a472a98980 ""
   "db.bib" 1500887182 763 48515985a4ddb000535995082d81d2cf ""
-  "main-blx.bib" 1500888334 307 e56cb10f98486102c42af6bde6368c64 ""
-  "main.aux" 1500888335 5302 a7fd955d366f1020dbbc87c622579a09 ""
+  "main-blx.bib" 1500890832 307 e56cb10f98486102c42af6bde6368c64 ""
+  "main.aux" 1500890833 5302 6f339880003d8d448fc0c56645dc33e4 ""
   (generated)
-  "main.blg"
   "main.bbl"
-["pdflatex"] 1500888333 "main.tex" "main.pdf" "main" 1500888335
+  "main.blg"
+["pdflatex"] 1500890832 "main.tex" "main.pdf" "main" 1500890833
   "../ClassStructureSTIR.pdf" 1500536794 12374 0982efb0a59a99939257100eb74ab9c3 ""
   "../ExampleGraph.png" 1500388368 25931 14741d0574a8d4002ad199862e9080fb ""
   "../global_workflow.pdf" 1500536046 12157 f52c25b6533e1e6204493f49423d05bf ""
@@ -308,16 +308,16 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1492575665 31661 3832dc67fcae1bb0c47594ea86c25797 ""
   "/usr/share/texmf/tex/latex/omscmtt.fd" 1498844715 607 06eee81c7b03b7b3b2af97278f259b7d ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1494278186 2220423 fef69922126604e2c6136500ed3e2ad4 ""
-  "main.aux" 1500888335 5302 a7fd955d366f1020dbbc87c622579a09 ""
-  "main.bbl" 1500887186 3637 c5dec7c7732e105a7b17565feb69f94c "bibtex main"
-  "main.out" 1500888335 765 472c176cbf7e443cbbd236d7545cef71 ""
-  "main.run.xml" 1500888335 2706 fa0437c6fcc2fcfe7a5e71b68398319b ""
-  "main.tex" 1500887929 26148 0151a7cce99f0d9414a087f8365ee60b ""
+  "main.aux" 1500890833 5302 6f339880003d8d448fc0c56645dc33e4 ""
+  "main.bbl" 1500890807 3637 c5dec7c7732e105a7b17565feb69f94c "bibtex main"
+  "main.out" 1500890833 765 472c176cbf7e443cbbd236d7545cef71 ""
+  "main.run.xml" 1500890833 2706 fa0437c6fcc2fcfe7a5e71b68398319b ""
+  "main.tex" 1500890829 26271 c3a62fca527624db5242a85b00ea05f4 ""
   "tree_setup.tex" 1500882196 1498 440c3c724d80246ab1967e2f12b4f611 ""
   (generated)
   "main.run.xml"
-  "main.pdf"
-  "main.out"
   "main.aux"
   "main-blx.bib"
   "main.log"
+  "main.pdf"
+  "main.out"

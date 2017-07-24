@@ -195,7 +195,7 @@ ProjMatrixByBin::
 get_cached_proj_matrix_elems_for_one_bin(
                                          ProjMatrixElemsForOneBin& probabilities) const
 {  
-  /*
+  
   if ( cache_disabled ) 
     return Succeeded::no;
   
@@ -239,8 +239,8 @@ get_cached_proj_matrix_elems_for_one_bin(
       return Succeeded::no;
     }
   
-  */
-  return Succeeded::no;
+  
+  //return Succeeded::no;
 }
 
 
