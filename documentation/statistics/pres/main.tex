@@ -29,12 +29,14 @@
 \begin{frame}
   \frametitle{The big picture}
   \begin{itemize}
-    \item STIR
-    \item iterative reconstruction algorithms
-    \item find the optimum of a \textsl{cost function}\\
-      \begin{align*} P(\text{global LOR response} | \text{image}) = \prod_{\text{all LORs}} P(\text{LOR response} | \text{image})\end{align*}\\
-      \begin{align*} P(\text{LOR response} | \text{image}) = \int_{\text{LOR}} \text{image density}\end{align*}
-      \item Image (estimate) $\leadsto$ LOR response: \textsl{forward projection}
+  \item STIR
+    \pause
+  \item iterative reconstruction algorithms
+  \item find the optimum of a \textsl{cost function}\\
+    \pause
+    \begin{align*} P(\text{global LOR response} | \text{image}) = \prod_{\text{all LORs}} P(\text{LOR response} | \text{image})\end{align*}\\
+    \begin{align*} P(\text{LOR response} | \text{image}) = \int_{\text{LOR}} \text{image density}\end{align*}
+  \item Image (estimate) $\leadsto$ LOR response: \textsl{forward projection}
   \end{itemize}
 \end{frame}
 
@@ -65,16 +67,17 @@
     \begin{itemize}
       \item heavily used in the machine-learning community
     \end{itemize}
+    \pause
   \item Much more than that:
     \begin{itemize}
       \item a software package for numerical calculations using data-flow \textsl{graphs}
     \end{itemize}
-
+    \pause
     \begin{figure}
       \centering
       \includegraphics[width = 0.9\textwidth]{../ExampleGraph.png}
     \end{figure}
-
+    \pause
     \begin{itemize}
       \item Design the graph \textsl{now}, save it to a file, run it \textsl{later}...
       \item Can run it (almost) everywhere: CPU, GPU, a cluster, ...
@@ -131,30 +134,21 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle{How to do ray tracing on a CPU?}
-  \framesubtitle{Siddon's algorithm (2D)}
-  \begin{itemize}
-    \item parametrize the LOR
-      \begin{align*} \mathbf{x} = (\mathbf{x_{end}} - \mathbf{x_{start}}) \cdot \alpha + \mathbf{x_{start}} \end{align*}
-      \begin{align*} \alpha \in [0,1] \end{align*}
-    \item get intersections with horizontal and vertical planes in terms of the line parameter $\alpha$
-    \item merge and sort them
-    \item \textsl{differences} between neighbouring $\alpha$ values in the merged list describe the LOIs!
-  \end{itemize}
-\end{frame}
-
 \section{How to do ray tracing on a GPU?}
 \begin{frame}
   \frametitle{Siddon and Tensorflow}
   \begin{itemize}
-    \item Siddon: $\mathcal{O}(N)$ for a LOR of length $N$ (this means a voxel array of size $N^3$!!)
-    \item many branches, a loop over the LOR, ...
-    \item \underline{very} inefficient when running with Tensorflow (GPU $\neq$ CPU architecture)
-      \begin{itemize}
-        \item especially problematic when trying to trace multiple LORs ``in parallel''
-      \end{itemize}
+  \item Siddon: $\mathcal{O}(N)$ for a LOR of length $N$ (this means a voxel array of size $N^3$!!)
+    \pause
+  \item many branches, a loop over the LOR, ...
+    \pause
+  \item \underline{very} inefficient when running with Tensorflow (GPU $\neq$ CPU architecture)
+    \begin{itemize}
+    \item especially problematic when trying to trace multiple LORs ``in parallel''
+    \end{itemize}
 
+    \pause
+    
     \item for Tensorflow: need an algorithm that ...
       \begin{itemize}
         \item uses the same algorithmic steps on \textsl{all} voxels of the LOR
@@ -166,11 +160,12 @@
 \begin{frame}
   \frametitle{Alternatives to Siddon}
   \begin{itemize}
-    \item naive approach: for every LOR, compute the LOI through \textsl{every} voxel, then add them all up
+    \item na\"ive approach: for every LOR, compute the LOI through \textsl{every} voxel, then add them all up
       \begin{itemize}
         \item works fine with Tensorflow, but scales as $\mathcal{O}(N^3)$
         \item CPU \& Siddon beat it again for real-world array sizes
       \end{itemize}
+    \pause
     \item alternative approach: think of (intersection) points \textsl{without} the notion of an LOR
   \end{itemize}
   \begin{figure}
@@ -183,9 +178,10 @@
 \begin{frame}
   \frametitle{Voxel-by-voxel LOI calculation}
   \begin{itemize}
-    \item still not much easier than the full problem!
-    \item a cube is very discontinuous, hard to do it analytically without branches
-    \item what if content with an \textsl{approximate} solution?
+  \item still not much easier than the full problem!
+  \item a cube is very discontinuous, hard to do it analytically without branches
+    \pause
+  \item what if content with an \textsl{approximate} solution?
   \end{itemize}
 
   \begin{figure}
@@ -205,6 +201,7 @@
       \begin{itemize}
         \item a heuristic that produces an \textsl{underestimation} of the distance to the voxel boundary
       \end{itemize}
+      \item
       \item need to assess the residual error that remains
   \end{itemize}
 \end{frame}
@@ -224,7 +221,7 @@
   \end{itemize}
 \end{frame}
 
-
+\section{Combining STIR and Tensorflow}
 \begin{frame}
   \frametitle{Bringing together STIR and Tensorflow}
   \framesubtitle{The infrastructure}
@@ -234,7 +231,9 @@
         \item much easier and faster to prototype
         \item Python API much better documented and more stable
       \end{itemize}
+      \pause
     \item \underline{Save} the complete graph into a \texttt{ProtoBuf} file
+      \pause
     \item \underline{Load} the file using the C++ API and make use of it in STIR
       \begin{itemize}
         \item link STIR against the Tensorflow (shared) library
@@ -259,18 +258,19 @@
     \item already computed matrix elements are stored
     \item new matrix elements related by symmetries to known ones ``come for free''!
     \end{itemize}
+    \pause
   \item but: caching most efficient if \textsl{every} new matrix element request is checked against cache before computing
-  \item \textsl{batching} the matrix element requests makes caching very inefficient!
+  \item \textsl{batching} the matrix element requests makes caching (very) inefficient!
   \end{itemize}
 \end{frame}
 
 \section{Results}
 \begin{frame}
-  \frametitle{Speedup without caching}
+  \frametitle{Speedup \underline{without} caching}
   \begin{figure}
     \centering
-      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_6_iterations.pdf}\label{6its}}
-      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_2_iterations.pdf}\label{2its}}
+      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_6_iterations_largefont.pdf}\label{6its}}
+      \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_2_iterations_largefont.pdf}\label{2its}}
       \caption{\textbf{left}: 6 iterations, \textbf{right}: 2 iterations}
   \end{figure}
   
@@ -315,13 +315,16 @@
       \begin{itemize}
         \item separation of graph generation (Python) and usage (C++) works very well
       \end{itemize}
+      \pause
     \item Speedup of $\sim$ 2 observed
   \end{itemize}
 
   Not too bad, but still some limitations:
   \begin{itemize}
-    \item how to improve utilization of GPU (conversion between Tensors and STIR objects)?
-    \item is there a better way to estimate the matrix elements?
+  \item how to improve utilization of GPU (conversion between Tensors and STIR objects)?
+    \pause
+  \item is there a better way to estimate the matrix elements?
+    \pause
     \item so far, use only a single thread (no \texttt{openMP} support)
       \begin{itemize}
         \item Tensorflow sessions tend to allocate all of the available GPU memory to avoid fragmentation...
@@ -336,7 +339,7 @@
       \begin{itemize}
         \item in particular: \url{https://github.com/philippwindischhofer/STIR/blob/stir-tf/documentation/statistics/doc/main.pdf}
       \end{itemize}
-    \item ray tracing scripts: \url{https://gitlab.phys.ethz.ch/luster/tf-raytracing} (ask Werner for access rights)
+    \item ray tracing scripts: \url{https://gitlab.phys.ethz.ch/luster/tf-raytracing} (ask Werner for access)
   \end{itemize}
 
   \begin{center}
@@ -344,11 +347,45 @@
   \end{center}
 \end{frame}
 
+%---------------------------------
+% begin backup section
+%---------------------------------
+
 \begin{frame}
   \begin{center}
     \huge
     \textcolor{blue}{Backup}
   \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to do ray tracing on a CPU?}
+  \framesubtitle{Siddon's algorithm (2D)}
+  \begin{itemize}
+    \item parametrize the LOR
+      \begin{align*} \mathbf{x} = (\mathbf{x_{end}} - \mathbf{x_{start}}) \cdot \alpha + \mathbf{x_{start}} \end{align*}
+      \begin{align*} \alpha \in [0,1] \end{align*}
+    \item get intersections with horizontal and vertical planes in terms of the line parameter $\alpha$
+    \item merge and sort them
+    \item \textsl{differences} between neighbouring $\alpha$ values in the merged list describe the LOIs!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Signed Distance Functions}
+  for a cube with side lenghts $(d_x, d_y, d_z)$, origin in the center:
+  \begin{align*}
+    \text{SDF}(x, y, z) = -\max\left(\left| x - \frac{d_x}{2} \right| - \frac{d_x}{2}, \left| y - \frac{d_y}{2} \right| - \frac{d_y}{2}, \left| z - \frac{d_z}{2} \right| - \frac{d_z}{2}\right)
+  \end{align*}
+
+  \begin{itemize}
+  \item $\text{SDF}$ is small (by design) close to the voxel boundary
+    \begin{itemize}
+    \item but must march in \textsl{both} directions
+    \item time until convergence depends on the location of the initial point
+    \end{itemize}
+  \end{itemize}
+
 \end{frame}
 
 \begin{frame}
@@ -360,18 +397,22 @@
   \end{figure}
 \end{frame}
 
+\begin{frame}
+  \begin{figure}
+    \centering
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../3_iterations_2LORs.png}}
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
+    \caption{\textbf{left}: 3 iterations, 2LORs per matrix element, \textbf{right}: original STIR}
+  \end{figure}
+\end{frame}
 
-%\begin{frame}
-%  \frametitle{Ray marching: an iterative algorithm}
-%  \framesubtitle{Accuracy}
-%  \begin{itemize}
-%    \item are there ever enough points?
-%  \end{itemize}
-  % put 3d histogram here
-
-%  \begin{itemize}
-%    \item does not matter for STIR!
-%  \end{itemize}
-%\end{frame}
+\begin{frame}
+  \begin{figure}
+    \centering
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../30_iterations_2LORs.png}}
+    \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
+    \caption{\textbf{left}: 30 iterations, 2LORs per matrix element, \textbf{right}: original STIR}
+  \end{figure}
+\end{frame}
 
 \end{document}
