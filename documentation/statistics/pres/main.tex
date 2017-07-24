@@ -224,18 +224,6 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Ray marching: an iterative algorithm}
-  \framesubtitle{Accuracy}
-  \begin{itemize}
-    \item are there ever enough points?
-  \end{itemize}
-  % put 3d histogram here
-
-  \begin{itemize}
-    \item does not matter for STIR!
-  \end{itemize}
-\end{frame}
 
 \begin{frame}
   \frametitle{Bringing together STIR and Tensorflow}
@@ -263,12 +251,17 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Tensorflow in STIR}
-    \begin{figure}
-    \centering
-    \only<1>{\subfloat[][]{\includegraphics[height = 0.72\textheight]{../ClassStructureSTIR.pdf}\label{6its}}}
-    \only<2>{\subfloat[][]{\includegraphics[height = 0.76\textheight]{../ClassStructureSTIRHighlighted.pdf}\label{6its}}}
-  \end{figure}
+  \frametitle{Caching in STIR}
+  \begin{itemize}
+  \item scanners have (many) symmetries
+  \item \texttt{ProjMatrixByBin} maintains a cache
+    \begin{itemize}
+    \item already computed matrix elements are stored
+    \item new matrix elements related by symmetries to known ones ``come for free''!
+    \end{itemize}
+  \item but: caching most efficient if \textsl{every} new matrix element request is checked against cache before computing
+  \item \textsl{batching} the matrix element requests makes caching very inefficient!
+  \end{itemize}
 \end{frame}
 
 \section{Results}
@@ -334,7 +327,6 @@
         \item Tensorflow sessions tend to allocate all of the available GPU memory to avoid fragmentation...
       \end{itemize}
   \end{itemize}
-
 \end{frame}
 
 \begin{frame}
@@ -350,7 +342,36 @@
   \begin{center}
     \textcolor{blue}{Any comments and contributions are welcome!}
   \end{center}
-
 \end{frame}
+
+\begin{frame}
+  \begin{center}
+    \huge
+    \textcolor{blue}{Backup}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tensorflow in STIR}
+    \begin{figure}
+    \centering
+    \only<1>{\subfloat[][]{\includegraphics[height = 0.72\textheight]{../ClassStructureSTIR.pdf}\label{6its}}}
+    \only<2>{\subfloat[][]{\includegraphics[height = 0.76\textheight]{../ClassStructureSTIRHighlighted.pdf}\label{6its}}}
+  \end{figure}
+\end{frame}
+
+
+%\begin{frame}
+%  \frametitle{Ray marching: an iterative algorithm}
+%  \framesubtitle{Accuracy}
+%  \begin{itemize}
+%    \item are there ever enough points?
+%  \end{itemize}
+  % put 3d histogram here
+
+%  \begin{itemize}
+%    \item does not matter for STIR!
+%  \end{itemize}
+%\end{frame}
 
 \end{document}
