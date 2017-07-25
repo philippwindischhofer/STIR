@@ -151,8 +151,9 @@
     
     \item for Tensorflow: need an algorithm that ...
       \begin{itemize}
-        \item uses the same algorithmic steps on \textsl{all} voxels of the LOR
-        \item uses the same algorithmic steps on \textsl{all} LORs
+        \item uses the same algorithmic steps on \textsl{all} voxels of the LOR...
+        \item uses the same algorithmic steps on \textsl{all} LORs...
+        \item ... to efficiently use the \textsl{single-instruction-multiple-data} GPU architecture
       \end{itemize}
   \end{itemize}
 \end{frame}
@@ -168,10 +169,11 @@
     \pause
     \item alternative approach: think of (intersection) points \textsl{without} the notion of an LOR
   \end{itemize}
+  \pause
   \begin{figure}
     \centering
-    \only<1>{\includegraphics[width = 0.9\textwidth]{../RMPointsLOR.pdf}}
-    \only<2>{\includegraphics[width = 0.9\textwidth]{../RMPointsTOR.pdf}}
+    \only<3>{\includegraphics[width = 0.9\textwidth]{../RMPointsLOR.pdf}}
+    \only<4>{\includegraphics[width = 0.9\textwidth]{../RMPointsTOR.pdf}}
   \end{figure}
 \end{frame}
 
@@ -186,23 +188,30 @@
 
   \begin{figure}
     \centering
-    \only<1>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep0.pdf}}
-    \only<2>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep1.pdf}}
-    \only<3>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep2.pdf}}
-    \only<4>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep3.pdf}}
-    \only<5>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep4.pdf}}
+    \only<2>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep0.pdf}}
+    \only<3>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep1.pdf}}
+    \only<4>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep2.pdf}}
+    \only<5>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep3.pdf}}
+    \only<6>{\includegraphics[width = 0.9\textwidth]{../RayMarchingStep4.pdf}}
   \end{figure}
 \end{frame}
 
+
 \begin{frame}
-  \frametitle{Ray marching: an iterative algorithm}
+  \frametitle{Signed Distance Functions}
+
   \begin{itemize}
-    \item Use \textsl{signed distance function} of a cube to cut down the number of iterations that are needed
-      \begin{itemize}
-        \item a heuristic that produces an \textsl{underestimation} of the distance to the voxel boundary
-      \end{itemize}
-      \item
-      \item need to assess the residual error that remains
+  \item a heuristic that produces an \textsl{underestimation} of the distance to the voxel boundary
+    \begin{itemize}
+      \item can do the iterations more efficiently
+    \end{itemize}
+  \item cheap to evaluate, much cheaper than to \textsl{actually} evaluate the true distance
+    \pause
+  \item much more powerful than what is needed here!
+    \begin{itemize}
+    \item implicitely define a \textsl{surface}
+    \item \textsl{union}, \textsl{intersection}, \textsl{repetition} of objects etc. translate into simple symbolic manipulations
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -271,7 +280,7 @@
     \centering
       \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_6_iterations_largefont.pdf}\label{6its}}
       \subfloat[][]{\includegraphics[width = 0.52\textwidth]{../speedup_2_iterations_largefont.pdf}\label{2its}}
-      \caption{\textbf{left}: 6 iterations, \textbf{right}: 2 iterations}
+      \caption{\textbf{left}: 6 ray tracing iterations, \textbf{right}: 2 ray tracing iterations}
   \end{figure}
   
   \begin{itemize}
@@ -300,7 +309,7 @@
     \centering
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../2_iterations_20LORs.png}}
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
-    \caption{\textbf{left}: 2 iterations, 20LORs per matrix element, \textbf{right}: original STIR}
+    \caption{\textbf{left}: 2 iterations, 20LORs per matrix element, \textbf{right}: original STIR; \textsl{both: 1 OSMAPOSL iteration}}
   \end{figure}
   \begin{itemize}
     \item some artefacts: too few points
@@ -337,7 +346,7 @@
   \begin{itemize}
     \item STIR-TF: \url{https://github.com/philippwindischhofer/STIR/tree/stir-tf}
       \begin{itemize}
-        \item in particular: \url{https://github.com/philippwindischhofer/STIR/blob/stir-tf/documentation/statistics/doc/main.pdf}
+        \item in particular: \url{https://github.com/philippwindischhofer/STIR/blob/stir-tf/documentation/tensorflow-documentation/doc/main.pdf}
       \end{itemize}
     \item ray tracing scripts: \url{https://gitlab.phys.ethz.ch/luster/tf-raytracing} (ask Werner for access)
   \end{itemize}
@@ -379,7 +388,14 @@
 
 \begin{frame}
   \frametitle{Signed Distance Functions}
-  for a cube with side lenghts $(d_x, d_y, d_z)$, origin in the center:
+
+  \begin{itemize}
+  \item a heuristic that produces an \textsl{underestimation} of the distance to the voxel boundary
+    \begin{itemize}
+      \item can do the iterations more efficiently
+    \end{itemize}
+  \item for a cube with side lenghts $(d_x, d_y, d_z)$, origin in the center:
+  \end{itemize}
   \begin{align*}
     \text{SDF}(x, y, z) = -\max\left(\left| x - \frac{d_x}{2} \right| - \frac{d_x}{2}, \left| y - \frac{d_y}{2} \right| - \frac{d_y}{2}, \left| z - \frac{d_z}{2} \right| - \frac{d_z}{2}\right)
   \end{align*}
@@ -391,7 +407,6 @@
     \item time until convergence depends on the location of the initial point
     \end{itemize}
   \end{itemize}
-
 \end{frame}
 
 \begin{frame}
@@ -408,7 +423,7 @@
     \centering
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../3_iterations_2LORs.png}}
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
-    \caption{\textbf{left}: 3 iterations, 2LORs per matrix element, \textbf{right}: original STIR}
+    \caption{\textbf{left}: 3 ray tracing iterations, 2LORs per matrix element, \textbf{right}: original STIR; \textsl{both: 1 OSMAPOSL iteration}}
   \end{figure}
 \end{frame}
 
@@ -417,7 +432,7 @@
     \centering
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../30_iterations_2LORs.png}}
     \subfloat[][]{\includegraphics[height = 0.55\textwidth]{../Siddon_CPU.png}\label{2its}}
-    \caption{\textbf{left}: 30 iterations, 2LORs per matrix element, \textbf{right}: original STIR}
+    \caption{\textbf{left}: 30 ray tracing iterations, 2LORs per matrix element, \textbf{right}: original STIR; \textsl{both: 1 OSMAPOSL iteration}}
   \end{figure}
 \end{frame}
 

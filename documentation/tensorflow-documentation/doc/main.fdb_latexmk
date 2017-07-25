@@ -1,5 +1,5 @@
 # Fdb version 3
-["bibtex main"] 1500973732 "main.aux" "main.bbl" "main" 1500974283
+["bibtex main"] 1500973732 "main.aux" "main.bbl" "main" 1500997313
   "/usr/share/texmf-dist/bibtex/bst/biblatex/biblatex.bst" 1492489108 63002 075c3f13314e99e71e6ff0a472a98980 ""
   "db.bib" 1500973563 2652 2a1d6dd97258777244062429878edd11 ""
   "main-blx.bib" 1500973733 307 e56cb10f98486102c42af6bde6368c64 ""
@@ -7,7 +7,7 @@
   (generated)
   "main.bbl"
   "main.blg"
-["pdflatex"] 1500973732 "main.tex" "main.pdf" "main" 1500974283
+["pdflatex"] 1500973732 "main.tex" "main.pdf" "main" 1500997313
   "../ClassStructureSTIR.pdf" 1500536794 12374 0982efb0a59a99939257100eb74ab9c3 ""
   "../ExampleGraph.png" 1500388368 25931 14741d0574a8d4002ad199862e9080fb ""
   "../LORTORcombined.pdf" 1500892031 4375 6a764ede0c153932c4c9ef29e42cfd8f ""
@@ -317,8 +317,8 @@
   "tree_setup.tex" 1500882196 1498 440c3c724d80246ab1967e2f12b4f611 ""
   (generated)
   "main.aux"
-  "main.pdf"
   "main.log"
-  "main.out"
+  "main.pdf"
   "main-blx.bib"
   "main.run.xml"
+  "main.out"
