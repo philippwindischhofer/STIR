@@ -14,7 +14,7 @@
 \usepackage{subfig}
 \usepackage{wasysym}
 \usepackage{fancyhdr}
-\usepackage[top=1.0in, bottom=0.9in, left=0.8in, right=0.8in]{geometry}
+\usepackage[top=1.0in, bottom=0.7in, left=0.8in, right=0.8in]{geometry}
 \usepackage{datetime}
 \usepackage{verbatim}
 \usepackage{siunitx}
@@ -65,7 +65,7 @@
   \maketitle
 
   \begin{abstract}
-    \noindent This document provides a bit more in-depth and technical information regarding the integration of Tensorflow into STIR. It should give enough hints and tips such as to ease further development and extension of the ideas presented here. See also the presentation slides that accompany this report, at \texttt{../pres/}.
+    \noindent This document provides a bit more in-depth and technical information regarding the integration of Tensorflow into STIR. It should give enough hints and tips such as to ease further development and extension of the ideas presented here. See also the presentation slides that accompany this report and give a more user- and problem-oriented description of the project, located at \texttt{../pres/}.
   \end{abstract}
 
   \section{The overall setup}
@@ -258,6 +258,16 @@
     \label{stir-class-structure}
   \end{figure}
 
+  \section{Other approaches}
+  Several different approaches to the problem of speeding up PET image reconstruction (or forward projection) exist and have been pursued in the literature. Most of them are based on CUDA, and none made use of Tensorflow.
+  \begin{itemize}
+  \item \textsl{FIRST} \cite{first, first_gpu}: they use symmetries of the scanner to reduce the size of the system matrix and then store it in a compressed form. If they also use ``pseudo-symmetries'' (i.e.~they also identify LORs that are \textsl{almost} parallel), the amount of data can be reduced substantially and the system matrix can be made to fit into the RAM. Then, they only need to retrieve the matrix elements and do the forward projection. Thus, they observed a considerable speedup when running with CUDA on the GPU.
+  \item The authors of \cite{plos} implement both forward- and backprojection in CUDA. They also use a fixed number of sampling points per LOR to make the implementation run efficiently on the GPU. Beside the standard method where each voxel is weighted according to its LOI contribution, they also investigate different interpolation methods.
+  \item In \cite{gpu_impl_siddon_improved}, both forward- and backprojection is implemented in CUDA. They use a modern variant of Siddon's algorithm \cite{siddon-improved-2} and start one GPU thread per LOR. Each thread then concurrently computes one line integral.
+  \item In \cite{fast-xray}, the authors implement yet another version of a 2D and 3D ray tracing algorithm in CUDA. It removes some computationally expensive steps compared to Siddon's method, but is likely not very efficient when implemented in Tensorflow (again many conditional branchings).
+  \end{itemize}
+  In some publications \cite{thread-opt}, the authors emphasized the need to do careful optimization of the CUDA thread placement and distribution onto the thread blocks of the GPU. This low-level access to the hardware is not possible when Tensorflow is used.
+
   \section{More Tensorflow}
   \label{more_tf}
   More Python scripts that were used for various tests (of algorithms different from the one explained in Section \ref{raymarching}) are available in an independent repository\footnote{https://gitlab.phys.ethz.ch/luster/tf-raytracing}.
@@ -290,13 +300,8 @@
     ]
   \end{forest}
 
-  \section{Other approaches}
-  Several different approaches to the problem of speeding up PET image reconstruction (or forward projection) exist and have been pursued in the literature. Most of them are based on CUDA, and none made use of Tensorflow.
-  \begin{itemize}
-    
-  \end{itemize}
   
-  \section{Futher information}
+  \section{Further information}
   The following papers and references were useful throughout the project, or provided additional information and ideas.
   \nocite{*}
   \printbibliography

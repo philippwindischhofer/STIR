@@ -1,13 +1,13 @@
 # Fdb version 3
-["bibtex main"] 1500892466 "main.aux" "main.bbl" "main" 1500893030
+["bibtex main"] 1500973732 "main.aux" "main.bbl" "main" 1500974283
   "/usr/share/texmf-dist/bibtex/bst/biblatex/biblatex.bst" 1492489108 63002 075c3f13314e99e71e6ff0a472a98980 ""
-  "db.bib" 1500887182 763 48515985a4ddb000535995082d81d2cf ""
-  "main-blx.bib" 1500893029 307 e56cb10f98486102c42af6bde6368c64 ""
-  "main.aux" 1500893030 6314 00e967194556df5fa221376fb9ddaa52 ""
+  "db.bib" 1500973563 2652 2a1d6dd97258777244062429878edd11 ""
+  "main-blx.bib" 1500973733 307 e56cb10f98486102c42af6bde6368c64 ""
+  "main.aux" 1500973734 7388 851ed980b0fe770d07d1d0469e70dfab ""
   (generated)
   "main.bbl"
   "main.blg"
-["pdflatex"] 1500893028 "main.tex" "main.pdf" "main" 1500893030
+["pdflatex"] 1500973732 "main.tex" "main.pdf" "main" 1500974283
   "../ClassStructureSTIR.pdf" 1500536794 12374 0982efb0a59a99939257100eb74ab9c3 ""
   "../ExampleGraph.png" 1500388368 25931 14741d0574a8d4002ad199862e9080fb ""
   "../LORTORcombined.pdf" 1500892031 4375 6a764ede0c153932c4c9ef29e42cfd8f ""
@@ -309,16 +309,16 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1492575665 31661 3832dc67fcae1bb0c47594ea86c25797 ""
   "/usr/share/texmf/tex/latex/omscmtt.fd" 1498844715 607 06eee81c7b03b7b3b2af97278f259b7d ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1494278186 2220423 fef69922126604e2c6136500ed3e2ad4 ""
-  "main.aux" 1500893030 6314 00e967194556df5fa221376fb9ddaa52 ""
-  "main.bbl" 1500892466 3637 c5dec7c7732e105a7b17565feb69f94c "bibtex main"
-  "main.out" 1500893030 765 472c176cbf7e443cbbd236d7545cef71 ""
-  "main.run.xml" 1500893030 2706 fa0437c6fcc2fcfe7a5e71b68398319b ""
-  "main.tex" 1500893020 27463 8f01ecd39ce7cb34f226dae853fdcfd3 ""
+  "main.aux" 1500973734 7388 851ed980b0fe770d07d1d0469e70dfab ""
+  "main.bbl" 1500973732 10399 8096fb091dd68aa4a8a171e7286255a3 "bibtex main"
+  "main.out" 1500973734 818 440b41f897b1196789aee1418fa577cb ""
+  "main.run.xml" 1500973734 2706 fa0437c6fcc2fcfe7a5e71b68398319b ""
+  "main.tex" 1500973729 29530 d5ccf226f088dd5aa68db7e4a1539914 ""
   "tree_setup.tex" 1500882196 1498 440c3c724d80246ab1967e2f12b4f611 ""
   (generated)
-  "main-blx.bib"
-  "main.run.xml"
-  "main.out"
+  "main.aux"
   "main.pdf"
   "main.log"
-  "main.aux"
+  "main.out"
+  "main-blx.bib"
+  "main.run.xml"
